@@ -3,18 +3,27 @@ const SUPABASE_URL = 'https://mfqonqbufimxjvoewfaf.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ssk-Q-5wkpU0STH1Ttr5NA_18K1V7fm';
 
 // 初始化 Supabase 客户端
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabase = null;
+
+// 初始化函数
+function initSupabase() {
+    if (!supabase && window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    return supabase;
+}
 
 const Storage = {
     // 初始化（兼容原接口）
     async init() {
-        // Supabase 自动初始化，无需额外操作
+        initSupabase();
         return Promise.resolve();
     },
 
     // 添加笔记
     async addNote(note) {
         try {
+            const client = initSupabase();
             const noteData = {
                 text: String(note.text || ''),
                 images: Array.isArray(note.images) ? note.images : (note.image ? [note.image] : []),
@@ -23,7 +32,7 @@ const Storage = {
                 favorite: false
             };
 
-            const { data, error } = await supabase
+            const { data, error } = await client
                 .from('notes')
                 .insert(noteData)
                 .select()
@@ -40,7 +49,8 @@ const Storage = {
     // 获取所有笔记（按时间倒序）
     async getAllNotes() {
         try {
-            const { data, error } = await supabase
+            const client = initSupabase();
+            const { data, error } = await client
                 .from('notes')
                 .select('*')
                 .order('timestamp', { ascending: false });
@@ -56,7 +66,8 @@ const Storage = {
     // 更新笔记
     async updateNote(id, updates) {
         try {
-            const { data, error } = await supabase
+            const client = initSupabase();
+            const { data, error } = await client
                 .from('notes')
                 .update(updates)
                 .eq('id', id)
@@ -74,7 +85,8 @@ const Storage = {
     // 删除笔记
     async deleteNote(id) {
         try {
-            const { error } = await supabase
+            const client = initSupabase();
+            const { error } = await client
                 .from('notes')
                 .delete()
                 .eq('id', id);
@@ -89,7 +101,8 @@ const Storage = {
     // 清空所有笔记
     async clearAll() {
         try {
-            const { error } = await supabase
+            const client = initSupabase();
+            const { error } = await client
                 .from('notes')
                 .delete()
                 .neq('id', 0); // 删除所有记录
