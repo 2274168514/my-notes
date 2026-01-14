@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(start:*)",
+      "Bash(python:*)",
+      "Bash(npx live-server:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(timeout:*)",
+      "Bash(git --version:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git config:*)"
+    ]
+  }
+}

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间线笔记</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- iOS 风格导航栏 -->
+        <nav class="navbar">
+            <div class="navbar-content">
+                <h1 class="nav-title">嗷嗷日记本</h1>
+                <div class="navbar-actions">
+                    <button class="icon-btn-nav" @click="openFilterModal">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M4 6H20M4 12H20M4 18H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <circle cx="17" cy="18" r="3" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="compose-btn" @click="openComposeModal">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <main class="main-container">
+            <!-- 横向时间线布局 -->
+            <div class="timeline-wrapper">
+                <!-- 横向时间线 -->
+                <div class="timeline-horizontal"></div>
+
+                <!-- 笔记卡片区域 - 自动换行 -->
+                <div class="notes-flow">
+                    <article
+                        v-for="note in displayNotes"
+                        :key="note.id"
+                        class="note-card"
+                        :class="{ 'has-image': (note.images && note.images.length) || note.image, 'is-favorite': note.favorite }"
+                        @click="openNoteDetail(note)"
+                    >
+                        <!-- 时间点 -->
+                        <div class="note-dot"></div>
+
+                        <!-- 卡片内容 -->
+                        <div class="card-inner">
+                            <!-- 皇冠收藏按钮 -->
+                            <button class="favorite-btn" :class="{ 'active': note.favorite }" @click="onFavoriteClick($event, note)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                    <path d="M5 16H19V21H5V16Z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                            <div class="card-header">
+                                <span class="card-time">{{ formatDetailTime(note.timestamp) }}</span>
+                            </div>
+
+                            <p class="card-text">{{ note.text }}</p>
+
+                            <!-- 图片 - 兼容新旧数据 -->
+                            <img v-if="note.images && note.images.length" :src="note.images[0]" class="card-image" alt="">
+                            <img v-else-if="note.image" :src="note.image" class="card-image" alt="">
+
+                            <!-- 标签 -->
+                            <div v-if="note.tags && note.tags.length" class="card-tags">
+                                <span
+                                    v-for="tag in note.tags"
+                                    :key="tag"
+                                    class="card-tag"
+                                    :style="{ color: getTagColor(tag), background: getTagColor(tag) + '1A' }"
+                                >
+                                    #{{ tag }}
+                                </span>
+                            </div>
+
+                            <!-- 卡片底部 -->
+                            <div class="card-footer">
+                                <span class="card-date">{{ formatTime(note.timestamp) }}</span>
+                                <svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                    <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- 空状态 -->
+                    <div v-if="displayNotes.length === 0" class="empty-state">
+                        <svg class="empty-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
+                            <rect x="8" y="8" width="48" height="48" rx="12" stroke="currentColor" stroke-width="2"/>
+                            <path d="M20 32H44M32 20V44" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <p class="empty-title">{{ notes.length === 0 ? '还没有笔记' : '没有符合条件的笔记' }}</p>
+                        <p class="empty-subtitle">{{ notes.length === 0 ? '点击右上角的 + 号创建第一条笔记' : '试试调整筛选条件' }}</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 新建笔记弹窗 -->
+        <transition name="modal">
+            <div v-if="showComposeModal" class="modal-backdrop" @click.self="closeComposeModal">
+                <div class="compose-modal">
+                    <div class="compose-header">
+                        <button class="header-btn" @click="closeComposeModal">取消</button>
+                        <h2 class="compose-title">新笔记</h2>
+                        <button class="header-btn header-btn-primary" @click="saveNote" :disabled="!canPost">发布</button>
+                    </div>
+
+                    <div class="compose-body">
+                        <!-- 默认标签选择 -->
+                        <div class="default-tags-section">
+                            <span
+                                v-for="tag in defaultTags"
+                                :key="tag.name"
+                                class="default-tag-chip"
+                                :class="{ 'selected': isTagSelected(tag.name) }"
+                                :style="{ '--tag-color': tag.color }"
+                                @click="selectDefaultTag(tag.name)"
+                            >
+                                #{{ tag.name }}
+                            </span>
+                        </div>
+
+                        <textarea
+                            v-model="newNote.text"
+                            class="compose-textarea"
+                            placeholder="在想什么？"
+                            rows="5"
+                            maxlength="280"
+                            ref="composeTextarea"
+                        ></textarea>
+                        <div class="char-counter">
+                            <span :class="{ 'over-limit': newNote.text.length > 280 }">
+                                {{ newNote.text.length }}
+                            </span>/280
+                        </div>
+
+                        <!-- 图片预览区 -->
+                        <div v-if="newNote.images && newNote.images.length" class="images-attachment">
+                            <div v-for="(img, index) in newNote.images" :key="index" class="image-preview-item">
+                                <img :src="img.preview" alt="">
+                                <button class="remove-attachment" @click="removeImage(index)">×</button>
+                            </div>
+                        </div>
+
+                        <!-- 标签输入 -->
+                        <div class="tags-section">
+                            <div v-if="newNote.tags.length > 0" class="tags-list">
+                                <span
+                                    v-for="(tag, index) in newNote.tags"
+                                    :key="index"
+                                    class="tag-chip"
+                                    :style="{ color: getTagColor(tag), background: getTagColor(tag) + '1A' }"
+                                >
+                                    #{{ tag }}
+                                    <button @click="removeTag(index)" class="tag-remove">
+                                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M2 2L10 10M2 10L10 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
+                                </span>
+                            </div>
+                            <input
+                                v-model="tagInput"
+                                class="tag-input-field"
+                                placeholder="#标签名"
+                                @keyup.enter="addTag"
+                                @keyup.space="addTag"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="compose-toolbar">
+                        <label class="toolbar-btn">
+                            <input type="file" accept="image/*" multiple @change="handleImageUpload" class="hidden-input">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                                <path d="M6 15L9.5 11.5L13 15L17 10L18 12V18C18 18.55 17.55 19 17 19H7C6.45 19 6 18.55 6 18V15Z" fill="currentColor"/>
+                            </svg>
+                        </label>
+                        <button class="toolbar-btn" @click="focusTagInput">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M7 10H17M7 14H13M7 18H10M21 6V18C21 19.1 20.1 20 19 20H5C3.9 20 3 19.1 3 18V6C3 4.9 3.9 4 5 4H19C20.1 4 21 4.9 21 6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 笔记详情弹窗 -->
+        <transition name="modal">
+            <div v-if="showDetailModal" class="modal-backdrop" @click.self="closeDetailModal">
+                <div class="detail-modal">
+                    <div class="detail-header">
+                        <button class="header-btn" @click="closeDetailModal">关闭</button>
+                        <div class="header-actions">
+                            <button class="icon-btn" @click="deleteCurrentNote">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M3.5 5H16.5M8.5 5V3.5H11.5V5M6.5 5V15.5C6.5 16.05 6.95 16.5 7.5 16.5H12.5C13.05 16.5 13.5 16.05 13.5 15.5V5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="detail-content" v-if="selectedNote">
+                        <p class="detail-text">{{ selectedNote.text }}</p>
+
+                        <!-- 所有图片 - 兼容新旧数据 -->
+                        <div v-if="selectedNote.images && selectedNote.images.length" class="detail-images">
+                            <img v-for="(img, index) in selectedNote.images" :key="index" :src="img" class="detail-image" alt="">
+                        </div>
+                        <img v-else-if="selectedNote.image" :src="selectedNote.image" class="detail-image" alt="">
+
+                        <!-- 标签编辑区 -->
+                        <div class="detail-tags-edit">
+                            <div class="detail-tags-list">
+                                <span
+                                    v-for="tag in selectedNote.tags"
+                                    :key="tag"
+                                    class="detail-tag"
+                                    :style="{ color: getTagColor(tag), background: getTagColor(tag) + '1A' }"
+                                >
+                                    #{{ tag }}
+                                    <button @click="removeDetailTag(tag)" class="detail-tag-remove">
+                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                            <path d="M1 1L9 9M1 9L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
+                                </span>
+                            </div>
+                            <input
+                                v-model="detailTagInput"
+                                class="detail-tag-input"
+                                placeholder="#标签名"
+                                @keyup.enter="addDetailTag"
+                                @keyup.space="addDetailTag"
+                            >
+                        </div>
+
+                        <div class="detail-meta">
+                            <span class="detail-date">{{ formatDetailTime(selectedNote.timestamp) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <!-- 筛选弹窗 -->
+        <transition name="modal">
+            <div v-if="showFilterModal" class="modal-backdrop" @click.self="closeFilterModal">
+                <div class="filter-modal">
+                    <div class="filter-header">
+                        <button class="header-btn" @click="resetFilters">重置</button>
+                        <h2 class="filter-title">筛选</h2>
+                        <button class="header-btn header-btn-primary" @click="applyFilters">完成</button>
+                    </div>
+
+                    <div class="filter-content">
+                        <!-- 时间筛选 -->
+                        <div class="filter-section">
+                            <h3 class="filter-section-title">时间</h3>
+                            <div class="filter-options">
+                                <div
+                                    v-for="option in timeFilterOptions"
+                                    :key="option.value"
+                                    class="filter-option"
+                                    :class="{ 'active': filter.time === option.value }"
+                                    @click="filter.time = option.value"
+                                >
+                                    <span class="filter-option-text">{{ option.label }}</span>
+                                    <div class="filter-check" v-if="filter.time === option.value">
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                            <path d="M2 7L5 10L12 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 标签筛选 -->
+                        <div class="filter-section">
+                            <h3 class="filter-section-title">标签</h3>
+                            <div class="filter-tags">
+                                <!-- 重要标签（收藏） -->
+                                <span
+                                    class="filter-tag"
+                                    :class="{ 'selected': filter.favorite }"
+                                    :style="{ background: filter.favorite ? 'rgba(255,0,0,0.1)' : 'rgba(0,0,0,0.05)' }"
+                                    @click="filter.favorite = !filter.favorite"
+                                >
+                                    <span class="rainbow-text">#重要</span>
+                                </span>
+                                <!-- 其他标签 -->
+                                <span
+                                    v-for="tag in allTags"
+                                    :key="tag"
+                                    class="filter-tag"
+                                    :class="{ 'selected': filter.tags.includes(tag) }"
+                                    :style="{ color: getTagColor(tag), background: filter.tags.includes(tag) ? getTagColor(tag) + '1A' : 'rgba(0,0,0,0.05)' }"
+                                    @click="toggleTagFilter(tag)"
+                                >
+                                    #{{ tag }}
+                                </span>
+                                <p v-if="allTags.length === 0 && !filter.favorite" class="filter-empty">暂无标签</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
