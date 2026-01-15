@@ -412,12 +412,13 @@ createApp({
             try {
                 const newFavoriteStatus = !note.favorite;
                 await Storage.updateNote(note.id, { favorite: newFavoriteStatus });
-                // 乐观更新：立即更新本地状态
-                note.favorite = newFavoriteStatus;
+                // 乐观更新：更新数组中的对应元素
+                const index = this.notes.findIndex(n => n.id === note.id);
+                if (index !== -1) {
+                    this.notes[index].favorite = newFavoriteStatus;
+                }
             } catch (error) {
                 console.error('收藏操作失败:', error);
-                // 恢复状态
-                note.favorite = !note.favorite;
                 if (error.message.includes('网络')) {
                     alert('网络连接失败，请检查网络后重试');
                 } else {
@@ -437,12 +438,13 @@ createApp({
             try {
                 const newLikeStatus = !note.liked;
                 await Storage.updateNote(note.id, { liked: newLikeStatus });
-                // 乐观更新：立即更新本地状态
-                note.liked = newLikeStatus;
+                // 乐观更新：更新数组中的对应元素
+                const index = this.notes.findIndex(n => n.id === note.id);
+                if (index !== -1) {
+                    this.notes[index].liked = newLikeStatus;
+                }
             } catch (error) {
                 console.error('点赞操作失败:', error);
-                // 恢复状态
-                note.liked = !note.liked;
                 if (error.message.includes('网络')) {
                     alert('网络连接失败，请检查网络后重试');
                 } else {
