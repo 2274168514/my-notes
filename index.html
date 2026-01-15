@@ -4,18 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>时间线笔记</title>
-        <link rel="preconnect" href="https://mfqonqbufimxjvoewfaf.supabase.co" crossorigin>
-    <link rel="dns-prefetch" href="https://mfqonqbufimxjvoewfaf.supabase.co">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="app">
-        <!-- 骨架屏 / 首屏加载动画 (Vue 挂载前显示) -->
-        <div id="app-loading" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#F2F2F7;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
-            <div style="width:40px;height:40px;border:3px solid rgba(0,122,255,0.1);border-top-color:#007AFF;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px;"></div>
-            <p style="color:#8E8E93;font-family:-apple-system,sans-serif;font-size:15px;">嗷嗷日记本...</p>
-            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
-        </div>
+    <!-- 骨架屏 / 首屏加载动画 (Vue 挂载前显示) -->
+    <p style="color:#8E8E93;font-family:-apple-system,sans-serif;font-size:15px;">嗷嗷日记本...</p>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    </div>
+
+    <div id="app" v-cloak>
         <!-- iOS 风格导航栏 -->
         <nav class="navbar">
             <div class="navbar-content">
@@ -368,7 +367,7 @@
         </transition>
     </div>
 
-    <script src="js/vue.global.js" defer></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js" defer></script>
     <script src="js/supabase.js" defer></script>
     <script src="js/storage.js" defer></script>
     <script src="js/app.js?v=2024011501" defer></script>
