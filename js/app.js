@@ -25,7 +25,8 @@ createApp({
                 { name: '生活', color: '#34C759' },      // 绿色
                 { name: '学习', color: '#007AFF' },      // 蓝色
                 { name: '工作', color: '#FF9500' },      // 橙色
-                { name: '女朋友', color: '#FF3B30' }     // 红色
+                { name: '女朋友', color: '#FF3B30' },    // 红色
+                { name: '男朋友', color: '#00BFFF' }     // 海蓝色
             ],
             // 筛选条件
             filter: {
