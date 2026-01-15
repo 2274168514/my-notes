@@ -475,10 +475,9 @@ createApp({
         async toggleLike(note) {
             try {
                 const newLikeStatus = !note.liked;
-                const delta = newLikeStatus ? 1 : -1;
 
-                // 更新云端点赞数
-                await Storage.updateNote(note.id, { likecountDelta: delta });
+                // 使用专门的点赞函数更新云端点赞数
+                await Storage.toggleLike(note.id, newLikeStatus);
 
                 // 更新本地点赞状态
                 if (newLikeStatus) {
@@ -492,7 +491,7 @@ createApp({
                 const index = this.notes.findIndex(n => n.id === note.id);
                 if (index !== -1) {
                     this.notes[index].liked = newLikeStatus;
-                    this.notes[index].likecount = (this.notes[index].likecount || 0) + delta;
+                    this.notes[index].likecount = (this.notes[index].likecount || 0) + (newLikeStatus ? 1 : -1);
                 }
             } catch (error) {
                 console.error('点赞操作失败:', error);

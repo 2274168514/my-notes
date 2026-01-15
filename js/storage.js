@@ -142,43 +142,37 @@ const Storage = (function() {
         // 更新笔记
         async updateNote(id, updates) {
             const client = getClient();
-
-            // 如果是更新点赞数
-            if (updates.likecountDelta !== undefined) {
-                try {
-                    // 先获取当前点赞数
-                    const { data: current, error: fetchError } = await client
-                        .from('notes')
-                        .select('*')
-                        .eq('id', id)
-                        .single();
-
-                    if (fetchError) throw fetchError;
-
-                    const newCount = (current.data?.likecount || 0) + updates.likecountDelta;
-
-                    // 更新点赞数
-                    const { data, error } = await client
-                        .from('notes')
-                        .update({ likecount: newCount })
-                        .eq('id', id)
-                        .select('*')
-                        .single();
-
-                    if (error) throw error;
-                    return data;
-                } catch (error) {
-                    console.error('[Storage] 更新点赞数失败:', error);
-                    throw error;
-                }
-            }
-
-            // 移除 likecountDelta（如果存在），避免传给 Supabase
-            const { likecountDelta, ...cleanUpdates } = updates;
-
             const { data, error } = await client
                 .from('notes')
-                .update(cleanUpdates)
+                .update(updates)
+                .eq('id', id)
+                .select('*')
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+
+        // 点赞/取消点赞（单独的函数）
+        async toggleLike(id, isLiking) {
+            const client = getClient();
+
+            // 先获取当前点赞数
+            const { data: current, error: fetchError } = await client
+                .from('notes')
+                .select('likecount')
+                .eq('id', id)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            const currentCount = current.data?.likecount || 0;
+            const newCount = isLiking ? currentCount + 1 : currentCount - 1;
+
+            // 更新点赞数
+            const { data, error } = await client
+                .from('notes')
+                .update({ likecount: newCount })
                 .eq('id', id)
                 .select('*')
                 .single();
