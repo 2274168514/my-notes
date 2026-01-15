@@ -165,7 +165,7 @@ body {
 .notes-flow {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-lg) 24px;
+    gap: var(--spacing-lg) 16px;
     align-items: flex-start;
     padding-top: 32px;
 }
@@ -935,12 +935,17 @@ body {
         padding: var(--spacing-md);
     }
 
+    /* 手机端强制两列布局 */
+    .notes-flow {
+        gap: 12px;
+    }
+
     .note-card {
-        width: 160px;
+        width: calc((100% - 12px) / 2);
     }
 
     .note-card.has-image {
-        width: 160px;
+        width: calc((100% - 12px) / 2);
     }
 }
 

@@ -8,6 +8,7 @@ const Storage = (function() {
     let _client = null;
     let _useSupabase = false;  // 是否使用 Supabase（false 表示使用 localStorage）
     let _initPromise = null;
+    let _syncInterval = null;  // 同步定时器
 
     // localStorage 键名
     const LOCAL_STORAGE_KEY = 'aonao_notes';
@@ -122,12 +123,64 @@ const Storage = (function() {
         // 初始化
         async init() {
             if (!_initPromise) {
-                _initPromise = waitForSupabase().then((success) => {
+                _initPromise = waitForSupabase().then(async (success) => {
                     if (success && window.supabase) {
                         _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                         console.log('[Storage] 使用 Supabase 存储');
+
+                        // 检查是否有本地未同步的数据
+                        const localNotes = getLocalNotes();
+                        if (localNotes.length > 0) {
+                            console.log('[Storage] 发现', localNotes.length, '条本地数据，尝试同步到云端...');
+                            try {
+                                for (const note of localNotes) {
+                                    await _client.from('notes').insert(note).select().single();
+                                }
+                                // 同步成功后清空本地数据
+                                saveLocalNotes([]);
+                                console.log('[Storage] 本地数据已同步到云端');
+                            } catch (error) {
+                                console.log('[Storage] 同步失败，保留本地数据');
+                            }
+                        }
                     } else {
-                        console.log('[Storage] 使用 localStorage 存储');
+                        console.log('[Storage] Supabase 加载超时，使用 localStorage 存储（数据不会同步到云端）');
+                        // 启动定时重试，每 10 秒尝试连接一次 Supabase
+                        if (!_syncInterval) {
+                            _syncInterval = setInterval(async () => {
+                                if (window.supabase && !_useSupabase) {
+                                    console.log('[Storage] 尝试重新连接 Supabase...');
+                                    try {
+                                        _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                                        // 测试连接
+                                        const { error } = await _client.from('notes').select('id').limit(1);
+                                        if (!error) {
+                                            console.log('[Storage] 重新连接成功，切换到 Supabase 存储');
+                                            _useSupabase = true;
+                                            // 同步本地数据
+                                            const localNotes = getLocalNotes();
+                                            if (localNotes.length > 0) {
+                                                console.log('[Storage] 发现', localNotes.length, '条本地数据，尝试同步到云端...');
+                                                for (const note of localNotes) {
+                                                    await _client.from('notes').insert(note).select().single();
+                                                }
+                                                saveLocalNotes([]);
+                                                console.log('[Storage] 本地数据已同步到云端');
+                                            }
+                                            // 停止定时器
+                                            if (_syncInterval) {
+                                                clearInterval(_syncInterval);
+                                                _syncInterval = null;
+                                            }
+                                            // 刷新页面数据
+                                            window.location.reload();
+                                        }
+                                    } catch (error) {
+                                        console.log('[Storage] 重新连接失败，稍后重试');
+                                    }
+                                }
+                            }, 10000);
+                        }
                     }
                 });
             }
