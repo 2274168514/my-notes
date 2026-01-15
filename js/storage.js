@@ -55,6 +55,41 @@ const Storage = (function() {
     }
 
     // 压缩图片（减少存储空间）
+    // ============ Storage 上传 ============
+
+    // 上传图片到 Supabase Storage
+    async function uploadImage(file) {
+        const client = getClient();
+        
+        // 生成唯一文件名: timestamp_random.ext
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const ext = file.name.split('.').pop() || 'jpg';
+        const fileName = `${timestamp}_${random}.${ext}`;
+
+        // 上传文件
+        const { data, error } = await client
+            .storage
+            .from('images')
+            .upload(fileName, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) {
+            console.error('[Storage] 上传失败:', error);
+            throw error;
+        }
+
+        // 获取公开 URL
+        const { data: { publicUrl } } = client
+            .storage
+            .from('images')
+            .getPublicUrl(fileName);
+
+        return publicUrl;
+    }
+
     function compressImage(base64, maxSize = 500) {
         return new Promise((resolve) => {
             const img = new Image();
@@ -106,9 +141,36 @@ const Storage = (function() {
 
         // 添加笔记
         async addNote(note) {
+            // 处理图片上传
+            let imageUrls = [];
+            
+            // 检查 images 数组
+            if (note.images && Array.isArray(note.images)) {
+                // 并行上传所有新图片
+                const uploadPromises = note.images.map(async (img) => {
+                    // 如果包含 file 对象，说明是新上传的图片
+                    if (img.file) {
+                        try {
+                            return await uploadImage(img.file);
+                        } catch (e) {
+                            console.error('图片上传失败，降级使用预览图:', e);
+                            return img.data || img.preview; // 降级处理
+                        }
+                    }
+                    // 否则可能是旧的 Base64 字符串或者已经是 URL
+                    return img.data || img; 
+                });
+                
+                imageUrls = await Promise.all(uploadPromises);
+            } 
+            // 兼容旧格式（单张图片）
+            else if (note.image) {
+                imageUrls = [note.image];
+            }
+
             const noteData = {
                 text: String(note.text || ''),
-                images: Array.isArray(note.images) ? note.images : (note.image ? [note.image] : []),
+                images: imageUrls,
                 tags: Array.isArray(note.tags) ? note.tags : (note.tags ? String(note.tags).split(',').filter(t => t) : []),
                 timestamp: note.timestamp || Date.now(),
                 favorite: false,

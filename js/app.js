@@ -324,12 +324,14 @@ createApp({
                 }
 
                 try {
+                    // 生成预览图（压缩 Base64 用于立即显示）
                     let base64 = await imageToBase64(file);
-                    base64 = await compressImage(base64);
+                    base64 = await compressImage(base64, 300); // 仅用于预览，压得小一点
 
                     this.newNote.images.push({
-                        preview: base64,
-                        data: base64
+                        preview: base64, // 界面显示用
+                        data: base64,    // 兼容字段
+                        file: file       // 原始文件对象，用于上传
                     });
                 } catch (error) {
                     console.error('图片处理失败:', error);
@@ -428,7 +430,7 @@ createApp({
 
             const noteData = {
                 text: this.newNote.text.trim(),
-                images: this.newNote.images.map(img => img.data),
+                images: this.newNote.images, // 传递完整对象，包含 file 属性
                 tags: [...this.newNote.tags],
                 timestamp: Date.now()
             };
