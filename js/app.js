@@ -13,6 +13,7 @@ createApp({
             detailTagInput: '',
             isLoading: true,
             loadError: null,
+            isSaving: false,
             newNote: {
                 text: '',
                 images: [],  // 改为数组存储多张图片
@@ -344,22 +345,30 @@ createApp({
 
         // 保存笔记
         async saveNote() {
-            if (!this.newNote.text.trim()) return;
+            if (!this.newNote.text.trim() || this.isSaving) return;
+
+            this.isSaving = true;
+
+            // 先关闭弹窗，提升用户体验（乐观更新）
+            const noteData = {
+                text: this.newNote.text.trim(),
+                images: this.newNote.images.map(img => img.data),
+                tags: [...this.newNote.tags],
+                timestamp: Date.now()
+            };
+
+            // 立即关闭弹窗和重置表单
+            this.closeComposeModal();
 
             try {
-                const noteData = {
-                    text: this.newNote.text.trim(),
-                    images: this.newNote.images.map(img => img.data),
-                    tags: [...this.newNote.tags],
-                    timestamp: Date.now()
-                };
-
+                // 后台保存
                 await Storage.addNote(noteData);
                 await this.loadNotes();
-                this.closeComposeModal();
             } catch (error) {
                 console.error('保存笔记失败:', error);
                 alert('保存失败，请重试');
+            } finally {
+                this.isSaving = false;
             }
         },
 

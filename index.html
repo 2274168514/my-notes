@@ -128,7 +128,9 @@
                     <div class="compose-header">
                         <button class="header-btn" @click="closeComposeModal">取消</button>
                         <h2 class="compose-title">新笔记</h2>
-                        <button class="header-btn header-btn-primary" @click="saveNote" :disabled="!canPost">发布</button>
+                        <button class="header-btn header-btn-primary" @click="saveNote" :disabled="!canPost || isSaving">
+                            {{ isSaving ? '发布中...' : '发布' }}
+                        </button>
                     </div>
 
                     <div class="compose-body">
