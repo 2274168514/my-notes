@@ -173,9 +173,12 @@ const Storage = (function() {
                 }
             }
 
+            // 移除 likeCountDelta（如果存在），避免传给 Supabase
+            const { likeCountDelta, ...cleanUpdates } = updates;
+
             const { data, error } = await client
                 .from('notes')
-                .update(updates)
+                .update(cleanUpdates)
                 .eq('id', id)
                 .select('*')
                 .single();
