@@ -129,7 +129,12 @@ createApp({
         // 加载所有笔记
         async loadNotes() {
             try {
-                this.notes = await Storage.getAllNotes();
+                const notes = await Storage.getAllNotes();
+                // 为旧笔记添加 liked 字段的默认值
+                this.notes = notes.map(note => ({
+                    ...note,
+                    liked: note.liked || false
+                }));
                 this.isLoading = false;
                 this.loadError = null;
             } catch (error) {
@@ -384,7 +389,13 @@ createApp({
                 if (index !== -1) {
                     this.notes.splice(index, 1);
                 }
-                alert('保存失败，请重试');
+                // 显示详细错误信息
+                const errorMsg = error.message || error.toString() || '未知错误';
+                if (errorMsg.includes('网络') || errorMsg.includes('fetch')) {
+                    alert('网络连接失败，请检查网络后重试');
+                } else {
+                    alert('保存失败: ' + errorMsg);
+                }
                 // 恢复表单数据
                 this.newNote = originalNote;
                 this.showComposeModal = true;
@@ -436,6 +447,10 @@ createApp({
         // 点赞/取消点赞笔记
         async toggleLike(note) {
             try {
+                // 确保 liked 字段存在
+                if (note.liked === undefined || note.liked === null) {
+                    note.liked = false;
+                }
                 const newLikeStatus = !note.liked;
                 await Storage.updateNote(note.id, { liked: newLikeStatus });
                 // 乐观更新：更新数组中的对应元素
@@ -445,10 +460,11 @@ createApp({
                 }
             } catch (error) {
                 console.error('点赞操作失败:', error);
-                if (error.message.includes('网络')) {
+                const errorMsg = error.message || error.toString() || '未知错误';
+                if (errorMsg.includes('网络') || errorMsg.includes('fetch')) {
                     alert('网络连接失败，请检查网络后重试');
                 } else {
-                    alert('操作失败，请重试');
+                    alert('点赞失败: ' + errorMsg);
                 }
             }
         },
