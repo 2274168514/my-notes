@@ -349,7 +349,6 @@ createApp({
 
             this.isSaving = true;
 
-            // 先关闭弹窗，提升用户体验（乐观更新）
             const noteData = {
                 text: this.newNote.text.trim(),
                 images: this.newNote.images.map(img => img.data),
@@ -357,16 +356,38 @@ createApp({
                 timestamp: Date.now()
             };
 
+            // 先保存原始数据副本，用于失败时回滚
+            const originalNote = JSON.parse(JSON.stringify(this.newNote));
+
+            // 乐观更新：立即添加到本地显示
+            const tempNote = {
+                id: 'temp_' + Date.now(),  // 临时ID
+                ...noteData
+            };
+            this.notes.unshift(tempNote);
+
             // 立即关闭弹窗和重置表单
             this.closeComposeModal();
 
             try {
-                // 后台保存
-                await Storage.addNote(noteData);
-                await this.loadNotes();
+                // 后台保存到数据库
+                const savedNote = await Storage.addNote(noteData);
+                // 替换临时笔记为真实笔记
+                const index = this.notes.findIndex(n => n.id === tempNote.id);
+                if (index !== -1) {
+                    this.notes[index] = savedNote;
+                }
             } catch (error) {
                 console.error('保存笔记失败:', error);
+                // 保存失败，移除临时添加的笔记
+                const index = this.notes.findIndex(n => n.id === tempNote.id);
+                if (index !== -1) {
+                    this.notes.splice(index, 1);
+                }
                 alert('保存失败，请重试');
+                // 恢复表单数据
+                this.newNote = originalNote;
+                this.showComposeModal = true;
             } finally {
                 this.isSaving = false;
             }
