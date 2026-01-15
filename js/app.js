@@ -141,7 +141,7 @@ createApp({
             console.error('初始化失败:', error);
             this.loadError = '加载失败，请刷新页面重试';
             this.isLoading = false;
-
+        }
     },
 
     unmounted() {
