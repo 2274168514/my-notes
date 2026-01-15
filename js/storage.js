@@ -267,7 +267,20 @@ const Storage = (function() {
                     return data;
                 } catch (error) {
                     console.error('[Storage] Supabase 更新失败，降级到 localStorage:', error);
-                    _useSupabase = false;
+                    // 不立即降级，而是先尝试将当前笔记添加到 localStorage
+                    // 这样可以保证数据不会丢失
+                    const notes = getLocalNotes();
+                    const index = notes.findIndex(n => n.id === id);
+                    if (index !== -1) {
+                        // 笔记已存在于 localStorage，直接更新
+                        notes[index] = { ...notes[index], ...updates };
+                        saveLocalNotes(notes);
+                        return notes[index];
+                    } else {
+                        // 笔记不存在，说明是 Supabase 的数据
+                        // 此时只能返回失败，提示用户
+                        throw new Error('网络连接失败，请检查网络后重试');
+                    }
                 }
             }
 
