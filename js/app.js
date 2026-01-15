@@ -397,15 +397,13 @@ createApp({
         async deleteCurrentNote() {
             if (!this.selectedNote) return;
 
-            if (confirm('确定要删除这条笔记吗？')) {
-                try {
-                    await Storage.deleteNote(this.selectedNote.id);
-                    await this.loadNotes();
-                    this.closeDetailModal();
-                } catch (error) {
-                    console.error('删除失败:', error);
-                    alert('删除失败，请重试');
-                }
+            try {
+                await Storage.deleteNote(this.selectedNote.id);
+                await this.loadNotes();
+                this.closeDetailModal();
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请重试');
             }
         },
 
