@@ -10,18 +10,25 @@ const Storage = (function() {
 
     // 等待 Supabase 库加载完成
     function waitForSupabase() {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             if (window.supabase) {
+                console.log('[Storage] Supabase 已加载');
                 resolve();
             } else {
-                // 最多等待5秒
+                console.log('[Storage] 等待 Supabase 库加载...');
+                // 最多等待30秒（移动端网络慢）
                 let attempts = 0;
-                const maxAttempts = 50;
+                const maxAttempts = 300;
                 const checkInterval = setInterval(() => {
                     attempts++;
-                    if (window.supabase || attempts >= maxAttempts) {
+                    if (window.supabase) {
                         clearInterval(checkInterval);
+                        console.log('[Storage] Supabase 库加载成功，耗时:', (attempts * 0.1).toFixed(1), '秒');
                         resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        console.error('[Storage] Supabase 库加载超时');
+                        reject(new Error('Supabase 库加载超时，请检查网络连接'));
                     }
                 }, 100);
             }
@@ -32,9 +39,10 @@ const Storage = (function() {
     async function getClient() {
         if (!_client) {
             await waitForSupabase();
-            if (window.supabase) {
-                _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            if (!window.supabase) {
+                throw new Error('Supabase 库未加载');
             }
+            _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         }
         return _client;
     }
@@ -88,9 +96,10 @@ const Storage = (function() {
         async init() {
             if (!_initPromise) {
                 _initPromise = waitForSupabase().then(() => {
-                    if (window.supabase) {
-                        _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    if (!window.supabase) {
+                        throw new Error('Supabase 库加载失败');
                     }
+                    _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 });
             }
             return _initPromise;
