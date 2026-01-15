@@ -353,6 +353,50 @@ body {
     100% { background-position: 200% center; }
 }
 
+/* 标签和点赞行 */
+.card-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px var(--spacing-md);
+    gap: 8px;
+}
+
+/* 点赞按钮 */
+.like-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    transition: all 0.2s ease;
+}
+
+.like-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    transform: scale(1.1);
+}
+
+.like-btn:active {
+    transform: scale(0.95);
+}
+
+.like-btn.active {
+    color: #FF2D55;
+}
+
+.like-btn.active svg {
+    fill: #FF2D55;
+    stroke: #FF2D55;
+    filter: drop-shadow(0 0 2px rgba(255, 45, 85, 0.4));
+}
+
 .card-footer {
     display: flex;
     justify-content: space-between;
@@ -900,6 +944,9 @@ body {
 }
 
 .detail-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding-top: var(--spacing-md);
     border-top: 0.5px solid var(--separator);
 }
@@ -908,6 +955,12 @@ body {
     font-size: 14px;
     color: var(--text-secondary);
     font-weight: 500;
+}
+
+/* 详情页点赞按钮 */
+.detail-meta .like-btn {
+    width: 36px;
+    height: 36px;
 }
 
 /* 滚动条 */

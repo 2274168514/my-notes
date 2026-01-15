@@ -425,6 +425,24 @@ createApp({
             this.toggleFavorite(note);
         },
 
+        // 点赞/取消点赞笔记
+        async toggleLike(note) {
+            try {
+                const newLikeStatus = !note.liked;
+                await Storage.updateNote(note.id, { liked: newLikeStatus });
+                await this.loadNotes();
+            } catch (error) {
+                console.error('点赞操作失败:', error);
+                alert('操作失败，请重试');
+            }
+        },
+
+        // 阻止点赞时打开卡片详情
+        onLikeClick(event, note) {
+            event.stopPropagation();
+            this.toggleLike(note);
+        },
+
         // 重置新笔记表单
         resetNewNote() {
             this.newNote = {

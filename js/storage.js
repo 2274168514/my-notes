@@ -195,7 +195,8 @@ const Storage = (function() {
                 images: Array.isArray(note.images) ? note.images : (note.image ? [note.image] : []),
                 tags: Array.isArray(note.tags) ? note.tags : (note.tags ? String(note.tags).split(',').filter(t => t) : []),
                 timestamp: note.timestamp || Date.now(),
-                favorite: false
+                favorite: false,
+                liked: false
             };
 
             if (_useSupabase) {
