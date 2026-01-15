@@ -8,7 +8,7 @@ const Storage = (function() {
     let _client = null;
     let _initPromise = null;
 
-    // 等待 Supabase 库加载（最多等待 10 秒）
+    // 等待 Supabase 库加载（最多等待 5 秒）
     function waitForSupabase() {
         return new Promise((resolve, reject) => {
             if (window.supabase) {
@@ -17,12 +17,13 @@ const Storage = (function() {
             } else {
                 console.log('[Storage] 等待 Supabase 库加载...');
                 let attempts = 0;
-                const maxAttempts = 100;  // 10 秒
+                const maxAttempts = 50;  // 5 秒
                 const checkInterval = setInterval(() => {
                     attempts++;
                     if (window.supabase) {
                         clearInterval(checkInterval);
-                        console.log('[Storage] Supabase 库加载成功，耗时:', (attempts * 0.1).toFixed(1), '秒');
+                        const duration = (attempts * 0.1).toFixed(1);
+                        console.log('[Storage] Supabase 库加载成功，耗时:', duration, '秒');
                         resolve();
                     } else if (attempts >= maxAttempts) {
                         clearInterval(checkInterval);

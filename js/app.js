@@ -14,6 +14,7 @@ createApp({
             isLoading: true,
             loadError: null,
             isSaving: false,
+            loadingText: '正在加载...',
             newNote: {
                 text: '',
                 images: [],  // 改为数组存储多张图片
@@ -116,12 +117,15 @@ createApp({
     async mounted() {
         try {
             // 加载本地点赞状态
+            this.loadingText = '正在初始化...';
             this.loadLocalLikedNotes();
 
             // 等待 Supabase 初始化完成
+            this.loadingText = '正在连接数据库...';
             await Storage.init();
 
             // 加载笔记
+            this.loadingText = '正在加载笔记...';
             await this.loadNotes();
         } catch (error) {
             console.error('初始化失败:', error);
