@@ -1142,3 +1142,24 @@ body {
     padding: var(--spacing-xl) 0;
     margin: 0;
 }
+
+/* 加载更多提示 */
+.loading-more {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    gap: 8px;
+}
+
+.loading-spinner-small {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0, 122, 255, 0.1);
+    border-top-color: var(--ios-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}

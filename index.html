@@ -116,8 +116,14 @@
                         </div>
                     </article>
 
+                    <!-- 加载更多提示 -->
+                    <div v-if="isLoadingMore" class="loading-more">
+                        <div class="loading-spinner-small"></div>
+                        <span>加载更多...</span>
+                    </div>
+
                     <!-- 空状态 -->
-                    <div v-if="displayNotes.length === 0" class="empty-state">
+                    <div v-if="displayNotes.length === 0 && !isLoading" class="empty-state">
                         <svg class="empty-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
                             <rect x="8" y="8" width="48" height="48" rx="12" stroke="currentColor" stroke-width="2"/>
                             <path d="M20 32H44M32 20V44" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>

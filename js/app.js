@@ -44,7 +44,13 @@ createApp({
             ],
             filteredNotes: [],
             // 本地点赞状态（存储当前设备点赞的笔记 ID）
-            localLikedNotes: new Set()
+            localLikedNotes: new Set(),
+            
+            // 分页状态
+            page: 0,
+            pageSize: 10,
+            hasMore: true,
+            isLoadingMore: false
         };
     },
 
@@ -128,11 +134,18 @@ createApp({
             // 加载笔记
             this.loadingText = '正在加载笔记...';
             await this.loadNotes();
+            
+            // 添加滚动监听实现无限加载
+            window.addEventListener('scroll', this.handleScroll);
         } catch (error) {
             console.error('初始化失败:', error);
             this.loadError = '加载失败，请刷新页面重试';
             this.isLoading = false;
         }
+    },
+
+    unmounted() {
+        window.removeEventListener('scroll', this.handleScroll);
     },
 
     methods: {
@@ -157,22 +170,49 @@ createApp({
             }
         },
 
-        // 加载所有笔记
+        // 加载笔记（第一页）
         async loadNotes() {
+            this.page = 0;
+            this.hasMore = true;
+            this.notes = []; // 清空现有笔记
+            await this.fetchNotes();
+        },
+
+        // 加载更多笔记
+        async loadMoreNotes() {
+            if (this.isLoadingMore || !this.hasMore) return;
+            
+            this.isLoadingMore = true;
+            this.page++;
+            await this.fetchNotes(true);
+            this.isLoadingMore = false;
+        },
+
+        // 获取笔记核心逻辑
+        async fetchNotes(isAppend = false) {
             try {
-                const notes = await Storage.getAllNotes();
-                // 合并云端数据和本地点赞状态
-                this.notes = notes.map(note => ({
+                const result = await Storage.getNotesPaging(this.page, this.pageSize);
+                const newNotes = result.data.map(note => ({
                     ...note,
                     liked: this.localLikedNotes.has(note.id),
                     likecount: note.likecount || 0
                 }));
+
+                if (isAppend) {
+                    this.notes = [...this.notes, ...newNotes];
+                } else {
+                    this.notes = newNotes;
+                }
+                
+                this.hasMore = result.hasMore;
                 this.isLoading = false;
                 this.loadError = null;
             } catch (error) {
                 console.error('加载笔记失败:', error);
-                this.loadError = '加载失败: ' + error.message;
-                this.isLoading = false;
+                if (!isAppend) {
+                    this.loadError = '加载失败: ' + error.message;
+                    this.isLoading = false;
+                }
             }
         },
 
@@ -618,6 +658,16 @@ createApp({
         // 检查标签是否被选中
         isTagSelected(tagName) {
             return this.newNote.tags.includes(tagName);
+        },
+
+        // 滚动监听
+        handleScroll() {
+            // 距离底部 200px 时加载更多
+            const bottomOfWindow = document.documentElement.scrollTop + window.innerHeight >= document.documentElement.offsetHeight - 200;
+            
+            if (bottomOfWindow && this.hasMore && !this.isLoadingMore && !this.isLoading) {
+                this.loadMoreNotes();
+            }
         }
     }
 }).mount('#app');

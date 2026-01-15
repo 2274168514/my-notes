@@ -127,17 +127,30 @@ const Storage = (function() {
             return data;
         },
 
-        // 获取所有笔记（按时间倒序）
+        // 获取所有笔记（按时间倒序）- 兼容旧调用，但建议用分页
         async getAllNotes() {
+            return this.getNotesPaging(0, 100); // 默认获取前100条防止卡死
+        },
+
+        // 分页获取笔记
+        async getNotesPaging(page = 0, pageSize = 20) {
             const client = getClient();
-            const { data, error } = await client
+            const from = page * pageSize;
+            const to = from + pageSize - 1;
+            
+            const { data, error, count } = await client
                 .from('notes')
-                .select('*')
-                .order('timestamp', { ascending: false });
+                .select('*', { count: 'exact' })
+                .order('timestamp', { ascending: false })
+                .range(from, to);
 
             if (error) throw error;
-            console.log('[Storage] 从 Supabase 加载了', data?.length || 0, '条笔记');
-            return data || [];
+            console.log(`[Storage] 加载第 ${page + 1} 页 (${data?.length}条)`);
+            return { 
+                data: data || [], 
+                total: count || 0,
+                hasMore: (data?.length === pageSize)
+            };
         },
 
         // 更新笔记
