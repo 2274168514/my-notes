@@ -478,27 +478,49 @@ createApp({
 
         // 点赞/取消点赞笔记
         async toggleLike(note) {
-            try {
-                const newLikeStatus = !note.liked;
+            // 1. 立即执行乐观更新（UI 立即响应）
+            const originalStatus = note.liked;
+            const originalCount = note.likecount;
+            const newLikeStatus = !originalStatus;
+            
+            // 更新本地点赞状态记录
+            if (newLikeStatus) {
+                this.localLikedNotes.add(note.id);
+            } else {
+                this.localLikedNotes.delete(note.id);
+            }
+            this.saveLocalLikedNotes();
 
+            // 更新 UI 显示
+            const index = this.notes.findIndex(n => n.id === note.id);
+            if (index !== -1) {
+                this.notes[index].liked = newLikeStatus;
+                this.notes[index].likecount = (this.notes[index].likecount || 0) + (newLikeStatus ? 1 : -1);
+            }
+
+            // 2. 后台发送网络请求
+            try {
                 // 使用专门的点赞函数更新云端点赞数
                 await Storage.toggleLike(note.id, newLikeStatus);
-
-                // 更新本地点赞状态
-                if (newLikeStatus) {
+            } catch (error) {
+                // 3. 如果失败，回滚状态
+                console.error('点赞操作失败，正在回滚:', error);
+                
+                // 回滚本地点赞状态记录
+                if (originalStatus) {
                     this.localLikedNotes.add(note.id);
                 } else {
                     this.localLikedNotes.delete(note.id);
                 }
                 this.saveLocalLikedNotes();
 
-                // 乐观更新：更新数组中的对应元素
-                const index = this.notes.findIndex(n => n.id === note.id);
+                // 回滚 UI 显示
                 if (index !== -1) {
-                    this.notes[index].liked = newLikeStatus;
-                    this.notes[index].likecount = (this.notes[index].likecount || 0) + (newLikeStatus ? 1 : -1);
+                    this.notes[index].liked = originalStatus;
+                    this.notes[index].likecount = originalCount;
                 }
-            } catch (error) {
+                
+                // 提示用户
                 console.error('点赞操作失败:', error);
                 const errorMsg = error.message || error.toString() || '未知错误';
                 if (errorMsg.includes('网络') || errorMsg.includes('fetch')) {
