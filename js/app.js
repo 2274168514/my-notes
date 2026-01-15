@@ -11,6 +11,8 @@ createApp({
             selectedNote: null,
             tagInput: '',
             detailTagInput: '',
+            isLoading: true,
+            loadError: null,
             newNote: {
                 text: '',
                 images: [],  // 改为数组存储多张图片
@@ -110,10 +112,15 @@ createApp({
 
     async mounted() {
         try {
+            // 等待 Supabase 初始化完成
             await Storage.init();
+
+            // 加载笔记
             await this.loadNotes();
         } catch (error) {
             console.error('初始化失败:', error);
+            this.loadError = '加载失败，请刷新页面重试';
+            this.isLoading = false;
         }
     },
 
@@ -122,8 +129,12 @@ createApp({
         async loadNotes() {
             try {
                 this.notes = await Storage.getAllNotes();
+                this.isLoading = false;
+                this.loadError = null;
             } catch (error) {
                 console.error('加载笔记失败:', error);
+                this.loadError = '加载失败: ' + error.message;
+                this.isLoading = false;
             }
         },
 

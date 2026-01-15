@@ -30,6 +30,25 @@
 
         <!-- 主内容区 -->
         <main class="main-container">
+            <!-- 加载状态 -->
+            <div v-if="isLoading" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">加载中...</p>
+            </div>
+
+            <!-- 错误状态 -->
+            <div v-else-if="loadError" class="error-state">
+                <svg class="error-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2"/>
+                    <path d="M32 22V32M32 38V42" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <p class="error-title">加载失败</p>
+                <p class="error-message">{{ loadError }}</p>
+                <button class="retry-btn" @click="loadNotes">重试</button>
+            </div>
+
+            <!-- 正常内容 -->
+            <template v-else>
             <!-- 横向时间线布局 -->
             <div class="timeline-wrapper">
                 <!-- 横向时间线 -->
@@ -99,6 +118,7 @@
                     </div>
                 </div>
             </div>
+            </template>
         </main>
 
         <!-- 新建笔记弹窗 -->

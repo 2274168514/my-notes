@@ -6,11 +6,35 @@ const Storage = (function() {
 
     // Supabase 客户端实例
     let _client = null;
+    let _initPromise = null;
+
+    // 等待 Supabase 库加载完成
+    function waitForSupabase() {
+        return new Promise((resolve) => {
+            if (window.supabase) {
+                resolve();
+            } else {
+                // 最多等待5秒
+                let attempts = 0;
+                const maxAttempts = 50;
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    if (window.supabase || attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+            }
+        });
+    }
 
     // 获取客户端
-    function getClient() {
-        if (!_client && window.supabase) {
-            _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    async function getClient() {
+        if (!_client) {
+            await waitForSupabase();
+            if (window.supabase) {
+                _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
         }
         return _client;
     }
@@ -62,7 +86,14 @@ const Storage = (function() {
     return {
         // 初始化
         async init() {
-            return Promise.resolve();
+            if (!_initPromise) {
+                _initPromise = waitForSupabase().then(() => {
+                    if (window.supabase) {
+                        _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    }
+                });
+            }
+            return _initPromise;
         },
 
         // 添加笔记
