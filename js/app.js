@@ -40,7 +40,9 @@ createApp({
                 { label: '本周', value: 'week' },
                 { label: '本月', value: 'month' }
             ],
-            filteredNotes: []
+            filteredNotes: [],
+            // 本地点赞状态（存储当前设备点赞的笔记 ID）
+            localLikedNotes: new Set()
         };
     },
 
@@ -113,6 +115,9 @@ createApp({
 
     async mounted() {
         try {
+            // 加载本地点赞状态
+            this.loadLocalLikedNotes();
+
             // 等待 Supabase 初始化完成
             await Storage.init();
 
@@ -126,14 +131,36 @@ createApp({
     },
 
     methods: {
+        // 加载本地点赞状态
+        loadLocalLikedNotes() {
+            try {
+                const stored = localStorage.getItem('aonao_liked_notes');
+                if (stored) {
+                    this.localLikedNotes = new Set(JSON.parse(stored));
+                }
+            } catch (error) {
+                console.error('加载本地点赞状态失败:', error);
+            }
+        },
+
+        // 保存本地点赞状态
+        saveLocalLikedNotes() {
+            try {
+                localStorage.setItem('aonao_liked_notes', JSON.stringify([...this.localLikedNotes]));
+            } catch (error) {
+                console.error('保存本地点赞状态失败:', error);
+            }
+        },
+
         // 加载所有笔记
         async loadNotes() {
             try {
                 const notes = await Storage.getAllNotes();
-                // 为旧笔记添加 liked 字段的默认值
+                // 合并云端数据和本地点赞状态
                 this.notes = notes.map(note => ({
                     ...note,
-                    liked: note.liked || false
+                    liked: this.localLikedNotes.has(note.id),
+                    likeCount: note.likeCount || 0
                 }));
                 this.isLoading = false;
                 this.loadError = null;
@@ -447,16 +474,25 @@ createApp({
         // 点赞/取消点赞笔记
         async toggleLike(note) {
             try {
-                // 确保 liked 字段存在
-                if (note.liked === undefined || note.liked === null) {
-                    note.liked = false;
-                }
                 const newLikeStatus = !note.liked;
-                await Storage.updateNote(note.id, { liked: newLikeStatus });
+                const delta = newLikeStatus ? 1 : -1;
+
+                // 更新云端点赞数
+                await Storage.updateNote(note.id, { likeCountDelta: delta });
+
+                // 更新本地点赞状态
+                if (newLikeStatus) {
+                    this.localLikedNotes.add(note.id);
+                } else {
+                    this.localLikedNotes.delete(note.id);
+                }
+                this.saveLocalLikedNotes();
+
                 // 乐观更新：更新数组中的对应元素
                 const index = this.notes.findIndex(n => n.id === note.id);
                 if (index !== -1) {
                     this.notes[index].liked = newLikeStatus;
+                    this.notes[index].likeCount = (this.notes[index].likeCount || 0) + delta;
                 }
             } catch (error) {
                 console.error('点赞操作失败:', error);

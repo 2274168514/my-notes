@@ -111,7 +111,7 @@ const Storage = (function() {
                 tags: Array.isArray(note.tags) ? note.tags : (note.tags ? String(note.tags).split(',').filter(t => t) : []),
                 timestamp: note.timestamp || Date.now(),
                 favorite: false,
-                liked: false
+                likeCount: 0
             };
 
             const client = getClient();
@@ -142,6 +142,32 @@ const Storage = (function() {
         // 更新笔记
         async updateNote(id, updates) {
             const client = getClient();
+
+            // 如果是更新点赞数，使用原子递增/递减
+            if (updates.likeCountDelta !== undefined) {
+                const { data, error } = await client
+                    .from('notes')
+                    .update({ likeCount: client.rpc('increment', { row_id: id, delta: updates.likeCountDelta }) })
+                    .eq('id', id)
+                    .select()
+                    .single();
+
+                if (error) {
+                    // 如果 RPC 不存在，使用普通方式
+                    const current = await client.from('notes').select('likeCount').eq('id', id).single();
+                    const newCount = (current.data?.likeCount || 0) + updates.likeCountDelta;
+                    const { data: data2, error: error2 } = await client
+                        .from('notes')
+                        .update({ likeCount: newCount })
+                        .eq('id', id)
+                        .select()
+                        .single();
+                    if (error2) throw error2;
+                    return data2;
+                }
+                return data;
+            }
+
             const { data, error } = await client
                 .from('notes')
                 .update(updates)

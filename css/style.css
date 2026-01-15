@@ -366,16 +366,19 @@ body {
 .like-btn {
     flex-shrink: 0;
     width: 28px;
+    min-width: 28px;
     height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 2px;
     background: transparent;
     border: none;
     border-radius: 50%;
     cursor: pointer;
     color: var(--text-tertiary);
     transition: all 0.2s ease;
+    padding: 0;
 }
 
 .like-btn:hover {
@@ -395,6 +398,18 @@ body {
     fill: #FF2D55;
     stroke: #FF2D55;
     filter: drop-shadow(0 0 2px rgba(255, 45, 85, 0.4));
+}
+
+/* 点赞数 */
+.like-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-left: 2px;
+}
+
+.like-btn.active .like-count {
+    color: #FF2D55;
 }
 
 .card-footer {
