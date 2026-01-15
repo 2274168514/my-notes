@@ -160,7 +160,7 @@ createApp({
                 this.notes = notes.map(note => ({
                     ...note,
                     liked: this.localLikedNotes.has(note.id),
-                    likeCount: note.likeCount || 0
+                    likecount: note.likecount || 0
                 }));
                 this.isLoading = false;
                 this.loadError = null;
@@ -478,7 +478,7 @@ createApp({
                 const delta = newLikeStatus ? 1 : -1;
 
                 // 更新云端点赞数
-                await Storage.updateNote(note.id, { likeCountDelta: delta });
+                await Storage.updateNote(note.id, { likecountDelta: delta });
 
                 // 更新本地点赞状态
                 if (newLikeStatus) {
@@ -492,7 +492,7 @@ createApp({
                 const index = this.notes.findIndex(n => n.id === note.id);
                 if (index !== -1) {
                     this.notes[index].liked = newLikeStatus;
-                    this.notes[index].likeCount = (this.notes[index].likeCount || 0) + delta;
+                    this.notes[index].likecount = (this.notes[index].likecount || 0) + delta;
                 }
             } catch (error) {
                 console.error('点赞操作失败:', error);

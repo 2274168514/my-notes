@@ -111,7 +111,7 @@ const Storage = (function() {
                 tags: Array.isArray(note.tags) ? note.tags : (note.tags ? String(note.tags).split(',').filter(t => t) : []),
                 timestamp: note.timestamp || Date.now(),
                 favorite: false,
-                likeCount: 0
+                likecount: 0
             };
 
             const client = getClient();
@@ -155,12 +155,12 @@ const Storage = (function() {
 
                     if (fetchError) throw fetchError;
 
-                    const newCount = (current.data?.likeCount || 0) + updates.likeCountDelta;
+                    const newCount = (current.data?.likecount || 0) + updates.likeCountDelta;
 
                     // 更新点赞数
                     const { data, error } = await client
                         .from('notes')
-                        .update({ likeCount: newCount })
+                        .update({ likecount: newCount })
                         .eq('id', id)
                         .select('*')
                         .single();
