@@ -1,51 +1,77 @@
-// Supabase 存储模块
+// 存储模块 - 双重存储策略（Supabase + localStorage 后备）
 const Storage = (function() {
     // Supabase 配置
     const SUPABASE_URL = 'https://mfqonqbufimxjvoewfaf.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_ssk-Q-5wkpU0STH1Ttr5NA_18K1V7fm';
 
-    // Supabase 客户端实例
+    // 状态变量
     let _client = null;
+    let _useSupabase = false;  // 是否使用 Supabase（false 表示使用 localStorage）
     let _initPromise = null;
 
-    // 等待 Supabase 库加载完成
+    // localStorage 键名
+    const LOCAL_STORAGE_KEY = 'aonao_notes';
+
+    // 等待 Supabase 库加载（最多等待 5 秒）
     function waitForSupabase() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (window.supabase) {
                 console.log('[Storage] Supabase 已加载');
-                resolve();
+                _useSupabase = true;
+                resolve(true);
             } else {
                 console.log('[Storage] 等待 Supabase 库加载...');
-                // 最多等待30秒（移动端网络慢）
                 let attempts = 0;
-                const maxAttempts = 300;
+                const maxAttempts = 50;  // 5 秒
                 const checkInterval = setInterval(() => {
                     attempts++;
                     if (window.supabase) {
                         clearInterval(checkInterval);
                         console.log('[Storage] Supabase 库加载成功，耗时:', (attempts * 0.1).toFixed(1), '秒');
-                        resolve();
+                        _useSupabase = true;
+                        resolve(true);
                     } else if (attempts >= maxAttempts) {
                         clearInterval(checkInterval);
-                        console.error('[Storage] Supabase 库加载超时');
-                        reject(new Error('Supabase 库加载超时，请检查网络连接'));
+                        console.log('[Storage] Supabase 库加载超时，使用 localStorage');
+                        _useSupabase = false;
+                        resolve(false);
                     }
                 }, 100);
             }
         });
     }
 
-    // 获取客户端
-    async function getClient() {
-        if (!_client) {
-            await waitForSupabase();
-            if (!window.supabase) {
-                throw new Error('Supabase 库未加载');
-            }
+    // 获取 Supabase 客户端
+    function getClient() {
+        if (!_client && _useSupabase && window.supabase) {
             _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         }
         return _client;
     }
+
+    // ============ localStorage 操作 ============
+
+    // 从 localStorage 获取所有笔记
+    function getLocalNotes() {
+        try {
+            const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        } catch (error) {
+            console.error('[LocalStorage] 读取失败:', error);
+            return [];
+        }
+    }
+
+    // 保存笔记到 localStorage
+    function saveLocalNotes(notes) {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(notes));
+        } catch (error) {
+            console.error('[LocalStorage] 保存失败:', error);
+        }
+    }
+
+    // ============ 图片处理 ============
 
     // 将图片转换为 Base64
     function imageToBase64(file) {
@@ -90,16 +116,19 @@ const Storage = (function() {
         });
     }
 
-    // 返回公共接口
+    // ============ 公共接口 ============
+
     return {
         // 初始化
         async init() {
             if (!_initPromise) {
-                _initPromise = waitForSupabase().then(() => {
-                    if (!window.supabase) {
-                        throw new Error('Supabase 库加载失败');
+                _initPromise = waitForSupabase().then((success) => {
+                    if (success && window.supabase) {
+                        _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                        console.log('[Storage] 使用 Supabase 存储');
+                    } else {
+                        console.log('[Storage] 使用 localStorage 存储');
                     }
-                    _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 });
             }
             return _initPromise;
@@ -107,101 +136,152 @@ const Storage = (function() {
 
         // 添加笔记
         async addNote(note) {
-            try {
-                const client = await getClient();
-                const noteData = {
-                    text: String(note.text || ''),
-                    images: Array.isArray(note.images) ? note.images : (note.image ? [note.image] : []),
-                    tags: Array.isArray(note.tags) ? note.tags : (note.tags ? String(note.tags).split(',').filter(t => t) : []),
-                    timestamp: note.timestamp || Date.now(),
-                    favorite: false
-                };
+            const noteData = {
+                id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                text: String(note.text || ''),
+                images: Array.isArray(note.images) ? note.images : (note.image ? [note.image] : []),
+                tags: Array.isArray(note.tags) ? note.tags : (note.tags ? String(note.tags).split(',').filter(t => t) : []),
+                timestamp: note.timestamp || Date.now(),
+                favorite: false
+            };
 
-                const { data, error } = await client
-                    .from('notes')
-                    .insert(noteData)
-                    .select()
-                    .single();
+            if (_useSupabase) {
+                try {
+                    const client = getClient();
+                    const { data, error } = await client
+                        .from('notes')
+                        .insert(noteData)
+                        .select()
+                        .single();
 
-                if (error) throw error;
-                return data;
-            } catch (error) {
-                console.error('添加笔记失败:', error);
-                throw error;
+                    if (error) throw error;
+                    console.log('[Storage] 笔记已保存到 Supabase');
+                    return data;
+                } catch (error) {
+                    console.error('[Storage] Supabase 保存失败，降级到 localStorage:', error);
+                    _useSupabase = false;
+                }
             }
+
+            // 使用 localStorage
+            const notes = getLocalNotes();
+            notes.unshift(noteData);
+            saveLocalNotes(notes);
+            console.log('[Storage] 笔记已保存到 localStorage');
+            return noteData;
         },
 
         // 获取所有笔记（按时间倒序）
         async getAllNotes() {
-            try {
-                const client = await getClient();
-                const { data, error } = await client
-                    .from('notes')
-                    .select('*')
-                    .order('timestamp', { ascending: false });
+            if (_useSupabase) {
+                try {
+                    const client = getClient();
+                    const { data, error } = await client
+                        .from('notes')
+                        .select('*')
+                        .order('timestamp', { ascending: false });
 
-                if (error) throw error;
-                return data || [];
-            } catch (error) {
-                console.error('加载笔记失败:', error);
-                throw error;
+                    if (error) throw error;
+                    console.log('[Storage] 从 Supabase 加载了', data?.length || 0, '条笔记');
+                    return data || [];
+                } catch (error) {
+                    console.error('[Storage] Supabase 加载失败，降级到 localStorage:', error);
+                    _useSupabase = false;
+                }
             }
+
+            // 使用 localStorage
+            const notes = getLocalNotes();
+            notes.sort((a, b) => b.timestamp - a.timestamp);
+            console.log('[Storage] 从 localStorage 加载了', notes.length, '条笔记');
+            return notes;
         },
 
         // 更新笔记
         async updateNote(id, updates) {
-            try {
-                const client = await getClient();
-                const { data, error } = await client
-                    .from('notes')
-                    .update(updates)
-                    .eq('id', id)
-                    .select()
-                    .single();
+            if (_useSupabase) {
+                try {
+                    const client = getClient();
+                    const { data, error } = await client
+                        .from('notes')
+                        .update(updates)
+                        .eq('id', id)
+                        .select()
+                        .single();
 
-                if (error) throw error;
-                return data;
-            } catch (error) {
-                console.error('更新笔记失败:', error);
-                throw error;
+                    if (error) throw error;
+                    return data;
+                } catch (error) {
+                    console.error('[Storage] Supabase 更新失败，降级到 localStorage:', error);
+                    _useSupabase = false;
+                }
             }
+
+            // 使用 localStorage
+            const notes = getLocalNotes();
+            const index = notes.findIndex(n => n.id === id);
+            if (index !== -1) {
+                notes[index] = { ...notes[index], ...updates };
+                saveLocalNotes(notes);
+                return notes[index];
+            }
+            throw new Error('笔记不存在');
         },
 
         // 删除笔记
         async deleteNote(id) {
-            try {
-                const client = await getClient();
-                const { error } = await client
-                    .from('notes')
-                    .delete()
-                    .eq('id', id);
+            if (_useSupabase) {
+                try {
+                    const client = getClient();
+                    const { error } = await client
+                        .from('notes')
+                        .delete()
+                        .eq('id', id);
 
-                if (error) throw error;
-            } catch (error) {
-                console.error('删除笔记失败:', error);
-                throw error;
+                    if (error) throw error;
+                    return;
+                } catch (error) {
+                    console.error('[Storage] Supabase 删除失败，降级到 localStorage:', error);
+                    _useSupabase = false;
+                }
             }
+
+            // 使用 localStorage
+            const notes = getLocalNotes();
+            const filteredNotes = notes.filter(n => n.id !== id);
+            saveLocalNotes(filteredNotes);
         },
 
         // 清空所有笔记
         async clearAll() {
-            try {
-                const client = await getClient();
-                const { error } = await client
-                    .from('notes')
-                    .delete()
-                    .neq('id', 0);
+            if (_useSupabase) {
+                try {
+                    const client = getClient();
+                    const { error } = await client
+                        .from('notes')
+                        .delete()
+                        .neq('id', 0);
 
-                if (error) throw error;
-            } catch (error) {
-                console.error('清空笔记失败:', error);
-                throw error;
+                    if (error) throw error;
+                    return;
+                } catch (error) {
+                    console.error('[Storage] Supabase 清空失败，降级到 localStorage:', error);
+                    _useSupabase = false;
+                }
             }
+
+            // 使用 localStorage
+            saveLocalNotes([]);
         },
 
         // 暴露图片处理函数（外部使用）
         imageToBase64: imageToBase64,
-        compressImage: compressImage
+        compressImage: compressImage,
+
+        // 暴露当前使用的存储类型
+        getStorageType() {
+            return _useSupabase ? 'supabase' : 'local';
+        }
     };
 })();
 
