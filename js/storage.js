@@ -99,7 +99,7 @@ const Storage = (function() {
         // 添加笔记
         async addNote(note) {
             try {
-                const client = getClient();
+                const client = await getClient();
                 const noteData = {
                     text: String(note.text || ''),
                     images: Array.isArray(note.images) ? note.images : (note.image ? [note.image] : []),
@@ -125,7 +125,7 @@ const Storage = (function() {
         // 获取所有笔记（按时间倒序）
         async getAllNotes() {
             try {
-                const client = getClient();
+                const client = await getClient();
                 const { data, error } = await client
                     .from('notes')
                     .select('*')
@@ -142,7 +142,7 @@ const Storage = (function() {
         // 更新笔记
         async updateNote(id, updates) {
             try {
-                const client = getClient();
+                const client = await getClient();
                 const { data, error } = await client
                     .from('notes')
                     .update(updates)
@@ -161,7 +161,7 @@ const Storage = (function() {
         // 删除笔记
         async deleteNote(id) {
             try {
-                const client = getClient();
+                const client = await getClient();
                 const { error } = await client
                     .from('notes')
                     .delete()
@@ -177,7 +177,7 @@ const Storage = (function() {
         // 清空所有笔记
         async clearAll() {
             try {
-                const client = getClient();
+                const client = await getClient();
                 const { error } = await client
                     .from('notes')
                     .delete()
