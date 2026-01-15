@@ -144,7 +144,7 @@ const Storage = (function() {
             const client = getClient();
 
             // 如果是更新点赞数
-            if (updates.likeCountDelta !== undefined) {
+            if (updates.likecountDelta !== undefined) {
                 try {
                     // 先获取当前点赞数
                     const { data: current, error: fetchError } = await client
@@ -155,7 +155,7 @@ const Storage = (function() {
 
                     if (fetchError) throw fetchError;
 
-                    const newCount = (current.data?.likecount || 0) + updates.likeCountDelta;
+                    const newCount = (current.data?.likecount || 0) + updates.likecountDelta;
 
                     // 更新点赞数
                     const { data, error } = await client
@@ -173,8 +173,8 @@ const Storage = (function() {
                 }
             }
 
-            // 移除 likeCountDelta（如果存在），避免传给 Supabase
-            const { likeCountDelta, ...cleanUpdates } = updates;
+            // 移除 likecountDelta（如果存在），避免传给 Supabase
+            const { likecountDelta, ...cleanUpdates } = updates;
 
             const { data, error } = await client
                 .from('notes')
