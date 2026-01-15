@@ -492,15 +492,29 @@ createApp({
 
         // 收藏/取消收藏笔记
         async toggleFavorite(note) {
+            // 1. 立即执行乐观更新（UI 立即响应）
+            const originalStatus = note.favorite;
+            const newFavoriteStatus = !originalStatus;
+            
+            // 更新 UI 显示
+            const index = this.notes.findIndex(n => n.id === note.id);
+            if (index !== -1) {
+                this.notes[index].favorite = newFavoriteStatus;
+            }
+
+            // 2. 后台发送网络请求
             try {
-                const newFavoriteStatus = !note.favorite;
                 await Storage.updateNote(note.id, { favorite: newFavoriteStatus });
-                // 乐观更新：更新数组中的对应元素
-                const index = this.notes.findIndex(n => n.id === note.id);
-                if (index !== -1) {
-                    this.notes[index].favorite = newFavoriteStatus;
-                }
             } catch (error) {
+                // 3. 如果失败，回滚状态
+                console.error('收藏操作失败，正在回滚:', error);
+                
+                // 回滚 UI 显示
+                if (index !== -1) {
+                    this.notes[index].favorite = originalStatus;
+                }
+
+                // 提示用户
                 console.error('收藏操作失败:', error);
                 if (error.message.includes('网络')) {
                     alert('网络连接失败，请检查网络后重试');
