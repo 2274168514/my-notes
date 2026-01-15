@@ -143,36 +143,41 @@ const Storage = (function() {
         async updateNote(id, updates) {
             const client = getClient();
 
-            // 如果是更新点赞数，使用原子递增/递减
+            // 如果是更新点赞数
             if (updates.likeCountDelta !== undefined) {
-                const { data, error } = await client
-                    .from('notes')
-                    .update({ likeCount: client.rpc('increment', { row_id: id, delta: updates.likeCountDelta }) })
-                    .eq('id', id)
-                    .select()
-                    .single();
+                try {
+                    // 先获取当前点赞数
+                    const { data: current, error: fetchError } = await client
+                        .from('notes')
+                        .select('*')
+                        .eq('id', id)
+                        .single();
 
-                if (error) {
-                    // 如果 RPC 不存在，使用普通方式
-                    const current = await client.from('notes').select('likeCount').eq('id', id).single();
+                    if (fetchError) throw fetchError;
+
                     const newCount = (current.data?.likeCount || 0) + updates.likeCountDelta;
-                    const { data: data2, error: error2 } = await client
+
+                    // 更新点赞数
+                    const { data, error } = await client
                         .from('notes')
                         .update({ likeCount: newCount })
                         .eq('id', id)
-                        .select()
+                        .select('*')
                         .single();
-                    if (error2) throw error2;
-                    return data2;
+
+                    if (error) throw error;
+                    return data;
+                } catch (error) {
+                    console.error('[Storage] 更新点赞数失败:', error);
+                    throw error;
                 }
-                return data;
             }
 
             const { data, error } = await client
                 .from('notes')
                 .update(updates)
                 .eq('id', id)
-                .select()
+                .select('*')
                 .single();
 
             if (error) throw error;
