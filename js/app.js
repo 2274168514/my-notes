@@ -479,7 +479,9 @@ createApp({
 
         // 选择心情
         selectMood(mood) {
+            console.log('[选择心情] 当前心情:', this.newNote.mood, '选择的心情:', mood);
             this.newNote.mood = mood;
+            console.log('[选择心情] 更新后心情:', this.newNote.mood);
             // 稍等一下再关闭气泡，给用户视觉反馈
             setTimeout(() => {
                 this.showMoodSelector = false;
@@ -545,6 +547,9 @@ createApp({
                 mood: this.newNote.mood || 'cloudy', // 确保有默认值
                 timestamp: Date.now()
             };
+
+            // 调试日志
+            console.log('[保存笔记] 当前心情:', this.newNote.mood, '保存的心情:', noteData.mood);
 
             // 先保存原始数据副本，用于失败时回滚
             const originalNote = JSON.parse(JSON.stringify(this.newNote));
