@@ -318,6 +318,50 @@
             </div>
         </transition>
 
+        <!-- 图片查看器弹窗 -->
+        <transition name="modal">
+            <div v-if="showImageViewer" class="modal-backdrop image-viewer-backdrop" @click.self="closeImageViewer">
+                <div class="image-viewer-container">
+                    <!-- 关闭按钮 -->
+                    <button class="image-viewer-close" @click="closeImageViewer">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- 上一张按钮 -->
+                    <button
+                        v-if="viewerImages.length > 1 && viewerIndex > 0"
+                        class="image-viewer-nav image-viewer-prev"
+                        @click="viewerPrev"
+                    >
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- 当前图片 -->
+                    <img :src="viewerImages[viewerIndex]" class="image-viewer-image" alt="">
+
+                    <!-- 下一张按钮 -->
+                    <button
+                        v-if="viewerImages.length > 1 && viewerIndex < viewerImages.length - 1"
+                        class="image-viewer-nav image-viewer-next"
+                        @click="viewerNext"
+                    >
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+
+                    <!-- 图片计数 -->
+                    <div v-if="viewerImages.length > 1" class="image-viewer-counter">
+                        {{ viewerIndex + 1 }} / {{ viewerImages.length }}
+                    </div>
+                </div>
+            </div>
+        </transition>
+
         <!-- 笔记详情弹窗 -->
         <transition name="modal">
             <div v-if="showDetailModal" class="modal-backdrop" @click.self="closeDetailModal">
@@ -336,11 +380,18 @@
                     <div class="detail-content" v-if="selectedNote">
                         <p class="detail-text">{{ selectedNote.text }}</p>
 
-                        <!-- 所有图片 - 九宫格布局 -->
+                        <!-- 所有图片 - 九宫格布局 - 点击查看大图 -->
                         <div v-if="selectedNote.images && selectedNote.images.length" class="detail-images" :class="`images-count-${Math.min(selectedNote.images.length, 9)}`">
-                            <img v-for="(img, index) in selectedNote.images" :key="index" :src="img" class="detail-image" alt="">
+                            <img
+                                v-for="(img, index) in selectedNote.images"
+                                :key="index"
+                                :src="img"
+                                class="detail-image"
+                                alt=""
+                                @click="openImageViewer(selectedNote.images, index)"
+                            >
                         </div>
-                        <img v-else-if="selectedNote.image" :src="selectedNote.image" class="detail-image detail-image-single" alt="">
+                        <img v-else-if="selectedNote.image" :src="selectedNote.image" class="detail-image detail-image-single" alt="" @click="openImageViewer([selectedNote.image], 0)">
 
                         <!-- 标签编辑区 -->
                         <div class="detail-tags-edit">
@@ -552,7 +603,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
     <script src="js/storage.js" defer></script>
-    <script src="js/app.js?v=2025011603" defer></script>
+    <script src="js/app.js?v=2025011604" defer></script>
 
 </body>
 </html>

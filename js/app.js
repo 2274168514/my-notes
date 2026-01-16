@@ -69,7 +69,12 @@ createApp({
             commentSortOrder: 'newest', // 'newest' 或 'oldest'
 
             // 图片拖拽排序实例
-            imageSortable: null
+            imageSortable: null,
+
+            // 图片查看器状态
+            showImageViewer: false,
+            viewerImages: [],
+            viewerIndex: 0
         };
     },
 
@@ -162,6 +167,9 @@ createApp({
 
             // 添加滚动监听实现无限加载
             window.addEventListener('scroll', this.handleScroll);
+
+            // 添加键盘事件监听（图片查看器）
+            window.addEventListener('keydown', this.handleKeydown);
         } catch (error) {
             console.error('初始化失败:', error);
             if (error.message === '连接超时') {
@@ -177,6 +185,7 @@ createApp({
 
     unmounted() {
         window.removeEventListener('scroll', this.handleScroll);
+        window.removeEventListener('keydown', this.handleKeydown);
     },
 
     methods: {
@@ -967,6 +976,63 @@ createApp({
                     this.notes[noteIndex].comments = [...this.selectedNote.comments];
                 }
                 alert('删除评论失败，请重试');
+            }
+        },
+
+        // ==================== 图片查看器 ====================
+
+        // 打开图片查看器
+        openImageViewer(images, index) {
+            this.viewerImages = images;
+            this.viewerIndex = index;
+            this.showImageViewer = true;
+
+            // 禁止背景滚动
+            document.body.style.overflow = 'hidden';
+        },
+
+        // 关闭图片查看器
+        closeImageViewer() {
+            this.showImageViewer = false;
+            this.viewerImages = [];
+            this.viewerIndex = 0;
+
+            // 恢复背景滚动
+            document.body.style.overflow = '';
+        },
+
+        // 上一张图片
+        viewerPrev() {
+            if (this.viewerIndex > 0) {
+                this.viewerIndex--;
+            }
+        },
+
+        // 下一张图片
+        viewerNext() {
+            if (this.viewerIndex < this.viewerImages.length - 1) {
+                this.viewerIndex++;
+            }
+        },
+
+        // 处理键盘事件（图片查看器）
+        handleKeydown(event) {
+            // 只有在图片查看器打开时才处理
+            if (!this.showImageViewer) return;
+
+            switch (event.key) {
+                case 'Escape':
+                    this.closeImageViewer();
+                    event.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                    this.viewerPrev();
+                    event.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    this.viewerNext();
+                    event.preventDefault();
+                    break;
             }
         }
     }

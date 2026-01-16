@@ -1839,3 +1839,157 @@ body {
         opacity: 1;
     }
 }
+
+/* ============ 图片查看器 ============ */
+
+.image-viewer-backdrop {
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 2000;
+}
+
+.image-viewer-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.image-viewer-image {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--radius-medium);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 关闭按钮 */
+.image-viewer-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.image-viewer-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* 导航按钮 */
+.image-viewer-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.image-viewer-prev {
+    left: 20px;
+}
+
+.image-viewer-next {
+    right: 20px;
+}
+
+.image-viewer-nav:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* 图片计数 */
+.image-viewer-counter {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 10;
+}
+
+/* 详情页图片可点击提示 */
+.detail-image {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.detail-image:hover {
+    transform: scale(1.02);
+}
+
+.detail-image-single {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.detail-image-single:hover {
+    transform: scale(1.02);
+}
+
+/* 手机端优化 */
+@media (max-width: 600px) {
+    .image-viewer-container {
+        padding: 10px;
+    }
+
+    .image-viewer-close {
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .image-viewer-nav {
+        width: 44px;
+        height: 44px;
+    }
+
+    .image-viewer-prev {
+        left: 10px;
+    }
+
+    .image-viewer-next {
+        right: 10px;
+    }
+
+    .image-viewer-counter {
+        bottom: 10px;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    /* 支持左右滑动切换 */
+    .image-viewer-container {
+        touch-action: pan-y;
+    }
+}
