@@ -54,7 +54,18 @@
         </nav>
 
         <!-- 主内容区 -->
-        <main class="main-container">
+        <main class="main-container" ref="mainContainer">
+            <!-- 下拉刷新指示器 -->
+            <div class="pull-to-refresh" :class="{ 'loading': isPullRefreshing }" :style="{ transform: `translateY(${pullRefreshTranslateY}px)` }">
+                <div class="pull-indicator">
+                    <svg v-if="!isPullRefreshing" class="pull-icon" :class="{ 'rotated': pullRefreshRotate }" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 9L15 5L11 9M15 5V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div v-else class="pull-spinner"></div>
+                    <span class="pull-text">{{ pullRefreshText }}</span>
+                </div>
+            </div>
+
             <!-- 加载状态 -->
             <div v-if="isLoading" class="loading-state">
                 <div class="loading-spinner"></div>
@@ -603,7 +614,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
     <script src="js/storage.js" defer></script>
-    <script src="js/app.js?v=2025011606" defer></script>
+    <script src="js/app.js?v=2025011607" defer></script>
 
 </body>
 </html>

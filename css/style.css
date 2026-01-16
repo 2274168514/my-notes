@@ -162,6 +162,56 @@ body {
     width: 100%;
     margin: 0 auto;
     padding: var(--spacing-xl);
+    position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ============ 下拉刷新 ============ */
+
+.pull-to-refresh {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.pull-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.pull-icon {
+    transition: transform 0.3s ease;
+}
+
+.pull-icon.rotated {
+    transform: rotate(180deg);
+}
+
+.pull-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--text-tertiary);
+    border-top-color: var(--ios-blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.pull-text {
+    font-size: 14px;
+    font-weight: 500;
 }
 
 /* 横向时间线布局 */
