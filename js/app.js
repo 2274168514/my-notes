@@ -621,6 +621,8 @@ createApp({
             if (!this.selectedNote) return;
 
             const noteId = String(this.selectedNote.id); // 确保是字符串
+            // 保留原始 ID 用于 Supabase 删除（可能是数字）
+            const originalId = this.selectedNote.id;
 
             // 乐观更新：立即从本地移除
             const index = this.notes.findIndex(n => String(n.id) === noteId);
@@ -628,7 +630,7 @@ createApp({
                 this.notes.splice(index, 1);
             }
 
-            // 关闭详情弹窗
+            // 关闭详情弹窗（这会将 selectedNote 置为 null）
             this.closeDetailModal();
 
             // 如果是临时笔记，不需要删除数据库
@@ -638,7 +640,8 @@ createApp({
 
             // 后台删除数据库中的笔记
             try {
-                await Storage.deleteNote(this.selectedNote.id); // 传原始 ID 给后台，以防后台需要数字
+                // 使用之前保存的 originalId，不能再访问 this.selectedNote.id
+                await Storage.deleteNote(originalId);
             } catch (error) {
                 console.error('删除失败:', error);
                 // 回滚：恢复笔记
