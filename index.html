@@ -20,7 +20,7 @@
             
             <!-- Cloudy Icon: Cloud shape -->
             <symbol id="icon-cloudy" viewBox="0 0 24 24">
-                <path d="M17.5 19C19.9853 19 22 16.9853 22 14.5C22 12.132 20.177 10.244 17.8 10.05C17.45 6.96 14.99 4.5 12 4.5C9.01 4.5 6.55 6.96 6.2 10.05C3.83 10.25 2 12.13 2 14.5C2 16.99 4.015 19 6.5 19H17.5Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/>
+                <path d="M17.5 19C19.9853 19 22 16.9853 22 14.5C22 12.132 20.177 10.244 17.8 8.05C17.45 4.96 14.99 2.5 12 2.5C9.01 2.5 6.55 4.96 6.2 8.05C3.83 8.25 2 10.13 2 12.5C2 14.99 4.015 17 6.5 17H17.5Z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/>
             </symbol>
             
             <!-- Rainy Icon: Cloud with rain drops -->
@@ -89,7 +89,20 @@
                         @click="openNoteDetail(note)"
                     >
                         <!-- 时间点 (增加心情颜色 class) -->
-                        <div class="note-dot" :class="`mood-${note.mood || 'cloudy'}`"></div>
+                        <div class="note-dot-wrapper">
+                            <!-- 收藏状态：黄色圆点 -->
+                            <div v-if="note.favorite" class="note-dot is-favorite-dot"></div>
+                            <!-- 晴天：太阳图标 -->
+                            <div v-else-if="note.mood === 'sunny'" class="note-dot-icon mood-sunny">
+                                <svg width="14" height="14" viewBox="0 0 24 24"><use href="#icon-sunny"></use></svg>
+                            </div>
+                            <!-- 雨天：雨图标 -->
+                            <div v-else-if="note.mood === 'rainy'" class="note-dot-icon mood-rainy">
+                                <svg width="14" height="14" viewBox="0 0 24 24"><use href="#icon-rainy"></use></svg>
+                            </div>
+                            <!-- 默认/阴天：蓝色圆点 -->
+                            <div v-else class="note-dot mood-default"></div>
+                        </div>
 
                         <!-- 卡片内容 -->
                         <div class="card-inner">

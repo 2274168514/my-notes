@@ -43,11 +43,11 @@
 
     /* 心情颜色 */
     --mood-sunny: #FF9500;
-    --mood-cloudy: #8E8E93;
+    --mood-cloudy: #007AFF; /* 恢复为蓝色 */
     --mood-rainy: #5856D6;
     
     --bg-sunny: rgba(255, 149, 0, 0.05);
-    --bg-cloudy: rgba(142, 142, 147, 0.05);
+    --bg-cloudy: rgba(0, 122, 255, 0.05); /* 恢复为蓝色背景 */
     --bg-rainy: rgba(88, 86, 214, 0.05);
 }
 
@@ -261,63 +261,78 @@ body {
     z-index: 0;
 }
 
-/* 时间点 */
-.note-dot {
+/* 时间点包装器 - 保持定位逻辑 */
+.note-dot-wrapper {
     position: absolute;
-    top: -5px;
-    left: 20px;
+    top: -8px; /* 调整位置以适应图标中心 */
+    left: 17px; /* 调整水平位置 */
+    width: 16px;
+    height: 16px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 默认圆点 (蓝色) 和 收藏圆点 (黄色) */
+.note-dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;
     background: var(--ios-blue);
     border: 2px solid var(--bg-secondary);
     box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
-    z-index: 2;
     transition: all 0.2s ease;
 }
 
-/* 心情颜色支持 */
-.note-dot.mood-sunny {
-    background: var(--mood-sunny);
-    box-shadow: 0 0 0 4px var(--bg-sunny);
+/* 收藏圆点 - 强制黄色 */
+.note-dot.is-favorite-dot {
+    background: var(--ios-yellow);
+    box-shadow: 0 0 0 4px rgba(255, 204, 0, 0.25);
 }
 
-.note-dot.mood-cloudy {
-    background: var(--mood-cloudy);
-    box-shadow: 0 0 0 4px var(--bg-cloudy);
+/* 默认心情圆点 (阴天/默认) - 蓝色 */
+.note-dot.mood-default {
+    background: var(--ios-blue);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
 }
 
-.note-dot.mood-rainy {
-    background: var(--mood-rainy);
-    box-shadow: 0 0 0 4px var(--bg-rainy);
+/* 心情图标 (无背景圆点，纯图标) */
+.note-dot-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary); /* 遮挡背后的线 */
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.note-dot-icon.mood-sunny {
+    color: var(--mood-sunny);
+}
+
+.note-dot-icon.mood-rainy {
+    color: var(--mood-rainy);
+}
+
+/* Hover 效果 */
+.note-card:hover .note-dot.mood-default {
+    box-shadow: 0 0 0 6px rgba(0, 122, 255, 0.25);
+}
+
+.note-card:hover .note-dot.is-favorite-dot {
+    box-shadow: 0 0 0 6px rgba(255, 204, 0, 0.35);
+}
+
+.note-card:hover .note-dot-icon {
+    transform: scale(1.2);
 }
 
 /* 收藏的时间点 - 优先级最高 */
 .note-card.is-favorite .note-dot {
-    /* 保持心情颜色作为背景，但使用金色光晕 */
-    box-shadow: 0 0 0 4px rgba(255, 204, 0, 0.25);
-}
-
-.note-card:hover .note-dot {
-    box-shadow: 0 0 0 6px rgba(0, 122, 255, 0.25);
-}
-
-/* 保持hover时的心情光晕颜色 */
-.note-card:hover .note-dot.mood-sunny {
-    box-shadow: 0 0 0 6px var(--bg-sunny);
-}
-
-.note-card:hover .note-dot.mood-cloudy {
-    box-shadow: 0 0 0 6px var(--bg-cloudy);
-}
-
-.note-card:hover .note-dot.mood-rainy {
-    box-shadow: 0 0 0 6px var(--bg-rainy);
-}
-
-/* 收藏状态hover时的金色光晕 */
-.note-card.is-favorite:hover .note-dot {
-    box-shadow: 0 0 0 6px rgba(255, 204, 0, 0.35);
+    /* 这里的样式已经被上面的 .is-favorite-dot 覆盖，保留此块为了兼容性或未来扩展 */
 }
 
 /* 卡片内容 */
@@ -935,6 +950,20 @@ body {
 .mood-option.active[data-mood="rainy"] {
     color: var(--mood-rainy);
     border-color: var(--mood-rainy);
+}
+
+.toolbar-btn svg {
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    stroke: currentColor;
+}
+
+/* 针对心情图标单独调整，因为 use href 引用可能自带样式，这里强制统一 */
+.toolbar-btn use {
+    stroke: currentColor;
+    fill: none;
 }
 
 /* 按钮本身的激活态颜色 */
