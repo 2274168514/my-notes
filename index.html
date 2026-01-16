@@ -55,6 +55,13 @@
 
         <!-- 主内容区 -->
         <main class="main-container" ref="mainContainer">
+            <!-- 下拉刷新指示器 -->
+            <div class="pull-to-refresh" :class="{ 'loading': isPullRefreshing }" :style="{ transform: `translateY(${pullRefreshTranslateY}px)` }">
+                <div class="pull-indicator">
+                    <svg v-if="!isPullRefreshing" class="pull-icon" :class="{ 'rotated': pullRefreshRotate }" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 9L15 5L11 9M15 5V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div v-else class="pull-spinner"></div>
                     <span class="pull-text">{{ pullRefreshText }}</span>
                 </div>
             </div>

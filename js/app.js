@@ -77,6 +77,16 @@ createApp({
             viewerIndex: 0,
 
             // 下拉刷新状态
+            pullRefreshTranslateY: -60,
+            pullRefreshRotate: false,
+            isPullRefreshing: false,
+            pullRefreshText: '下拉刷新',
+            pullRefreshStartY: 0,
+            pullRefreshCurrentY: 0,
+            isPulling: false,
+            pullRefreshCount: 0,          // 下拉次数计数器
+            pullRefreshTimer: null,        // 重置计时器
+            pullRefreshRequiredCount: 2    // 需要下拉的次数
         };
     },
 
@@ -174,6 +184,7 @@ createApp({
             window.addEventListener('keydown', this.handleKeydown);
 
             // 添加下拉刷新 touch 事件监听
+            this.setupPullToRefresh();
         } catch (error) {
             console.error('初始化失败:', error);
             if (error.message === '连接超时') {
@@ -190,6 +201,7 @@ createApp({
     unmounted() {
         window.removeEventListener('scroll', this.handleScroll);
         window.removeEventListener('keydown', this.handleKeydown);
+        this.removePullToRefresh();
     },
 
     methods: {
@@ -1094,27 +1106,41 @@ createApp({
         // ==================== 下拉刷新 ====================
 
         // 设置下拉刷新事件监听
+        setupPullToRefresh() {
             const container = this.$refs.mainContainer;
             if (!container) return;
 
+            container.addEventListener('touchstart', this.handleTouchStart, { passive: true });
+            container.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+            container.addEventListener('touchend', this.handleTouchEnd, { passive: true });
         },
 
         // 移除下拉刷新事件监听
+        removePullToRefresh() {
             const container = this.$refs.mainContainer;
             if (!container) return;
 
+            container.removeEventListener('touchstart', this.handleTouchStart);
+            container.removeEventListener('touchmove', this.handleTouchMove);
+            container.removeEventListener('touchend', this.handleTouchEnd);
         },
 
         // Touch 开始
+        handleTouchStart(event) {
             // 只在顶部时启用下拉刷新
             const container = this.$refs.mainContainer;
             if (container.scrollTop === 0) {
+                this.pullRefreshStartY = event.touches[0].clientY;
+                this.isPulling = true;
             }
         },
 
         // Touch 移动
+        handleTouchMove(event) {
+            if (!this.isPulling || this.isPullRefreshing) return;
 
             const currentY = event.touches[0].clientY;
+            const diff = currentY - this.pullRefreshStartY;
 
             // 只在向下拉动且在顶部时响应
             if (diff > 0 && this.$refs.mainContainer.scrollTop === 0) {
@@ -1122,57 +1148,97 @@ createApp({
 
                 // 限制最大下拉距离
                 const pullDistance = Math.min(diff * 0.5, 100);
+                this.pullRefreshTranslateY = -60 + pullDistance;
 
                 // 更新状态
                 if (pullDistance >= 60) {
+                    if (this.pullRefreshCount + 1 >= this.pullRefreshRequiredCount) {
+                        this.pullRefreshText = '释放立即刷新';
                     } else {
+                        this.pullRefreshText = `再下拉${this.pullRefreshRequiredCount - this.pullRefreshCount - 1}次即可刷新`;
                     }
+                    this.pullRefreshRotate = true;
                 } else {
+                    if (this.pullRefreshCount > 0) {
+                        this.pullRefreshText = `已下拉${this.pullRefreshCount}次，再下拉${this.pullRefreshRequiredCount - this.pullRefreshCount}次`;
                     } else {
+                        this.pullRefreshText = '下拉刷新';
                     }
+                    this.pullRefreshRotate = false;
                 }
             }
         },
 
         // Touch 结束
+        async handleTouchEnd() {
+            if (!this.isPulling) return;
 
+            this.isPulling = false;
 
             // 如果拉动距离足够，增加计数
+            if (this.pullRefreshTranslateY >= 0) {
+                this.pullRefreshCount++;
 
                 // 如果达到所需次数，执行刷新
+                if (this.pullRefreshCount >= this.pullRefreshRequiredCount) {
+                    await this.doPullRefresh();
                 } else {
                     // 未达到次数，重置位置但保留计数
+                    this.pullRefreshTranslateY = -60;
 
                     // 设置3秒后重置计数器
+                    if (this.pullRefreshTimer) {
+                        clearTimeout(this.pullRefreshTimer);
                     }
+                    this.pullRefreshTimer = setTimeout(() => {
+                        this.pullRefreshCount = 0;
+                        this.pullRefreshText = '下拉刷新';
                     }, 3000);
                 }
             } else {
                 // 未达到阈值，重置状态
+                this.resetPullRefresh();
             }
         },
 
         // 执行下拉刷新
+        async doPullRefresh() {
+            this.isPullRefreshing = true;
+            this.pullRefreshText = '正在刷新...';
+            this.pullRefreshTranslateY = 0;
 
             try {
                 // 重新加载笔记
                 await this.loadNotes();
+                this.pullRefreshText = '刷新成功';
 
                 // 1秒后重置
                 setTimeout(() => {
+                    this.resetPullRefresh();
                 }, 1000);
             } catch (error) {
                 console.error('刷新失败:', error);
+                this.pullRefreshText = '刷新失败';
 
                 // 1.5秒后重置
                 setTimeout(() => {
+                    this.resetPullRefresh();
                 }, 1500);
             }
         },
 
         // 重置下拉刷新状态
+        resetPullRefresh() {
+            this.isPullRefreshing = false;
+            this.pullRefreshTranslateY = -60;
+            this.pullRefreshRotate = false;
+            this.pullRefreshText = '下拉刷新';
+            this.pullRefreshCount = 0;
 
             // 清除计时器
+            if (this.pullRefreshTimer) {
+                clearTimeout(this.pullRefreshTimer);
+                this.pullRefreshTimer = null;
             }
         }
     }
