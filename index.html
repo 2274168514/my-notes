@@ -125,9 +125,9 @@
 
                             <!-- 标签和点赞行 -->
                             <div class="card-actions-row">
-                                <div v-if="note.tags && note.tags.length" class="card-tags">
+                                <div class="card-tags">
                                     <span
-                                        v-for="tag in note.tags"
+                                        v-for="tag in (note.tags || [])"
                                         :key="tag"
                                         class="card-tag"
                                         :style="{ color: getTagColor(tag), background: getTagColor(tag) + '1A' }"
