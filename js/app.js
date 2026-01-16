@@ -586,6 +586,156 @@ createApp({
         },
 
         // 保存笔记
+        // 触发彩蛋特效
+        checkEasterEgg(text) {
+            if (!window.confetti) return;
+            
+            // 1. 甜蜜组：爱心喷泉
+            if (/爱|想你|喜欢|love|宝贝|老婆|老公/.test(text)) {
+                const duration = 3000;
+                const end = Date.now() + duration;
+                (function frame() {
+                    confetti({
+                        particleCount: 2,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        shapes: ["heart"],
+                        colors: ["#FF3B30", "#FF9500", "#FF2D55"]
+                    });
+                    confetti({
+                        particleCount: 2,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        shapes: ["heart"],
+                        colors: ["#FF3B30", "#FF9500", "#FF2D55"]
+                    });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+            }
+            
+            // 2. 情绪组：生气震动
+            if (/生气|哼|讨厌|烦|滚/.test(text)) {
+                // 屏幕震动
+                document.body.classList.add("shake-screen");
+                setTimeout(() => document.body.classList.remove("shake-screen"), 500);
+                // 掉落碎心和便便
+                confetti({
+                    particleCount: 30,
+                    spread: 70,
+                    origin: { y: 0.3 },
+                    scalar: 3,
+                    shapes: ["text"],
+                    shapeOptions: { text: { value: ["💔", "💢", "💩"] } }
+                });
+            }
+            
+            // 3. 庆祝组：彩色礼花
+            if (/哈哈|开心|棒|纪念日|生日|快乐|牛|厉害/.test(text)) {
+                confetti({
+                    particleCount: 150,
+                    spread: 100,
+                    origin: { y: 0.6 },
+                    colors: ["#007AFF", "#34C759", "#FF9500", "#FF3B30", "#5856D6"]
+                });
+            }
+            
+            // 4. 干饭组：美食雨
+            if (/饿|吃|奶茶|火锅|饭|好吃的/.test(text)) {
+                const duration = 2000;
+                const end = Date.now() + duration;
+                (function frame() {
+                    confetti({
+                        particleCount: 1,
+                        startVelocity: 0,
+                        ticks: 200,
+                        origin: {
+                            x: Math.random(),
+                            y: Math.random() * 0.2 - 0.2
+                        },
+                        colors: ["#ffffff"],
+                        shapes: ["text"],
+                        shapeOptions: {
+                            text: {
+                                value: ["🍔", "🍟", "🍕", "🍗", "🍜", "🍣", "🍖", "🍱", "🍚", "🍙", "🥤", "🧋"]
+                            }
+                        },
+                        scalar: 2,
+                        gravity: 0.8,
+                        drift: 0
+                    });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+            }
+            
+            // 5. 晚安组：流星划过 (简化为星星掉落)
+            if (/晚安|累|睡|困|失眠/.test(text)) {
+                const end = Date.now() + 2000;
+                // 背景变暗一点点
+                document.body.style.transition = "background 1s";
+                const oldBg = document.body.style.background;
+                document.body.style.background = "#1a1a2e";
+                setTimeout(() => document.body.style.background = oldBg, 2500);
+                
+                (function frame() {
+                    confetti({
+                        particleCount: 1,
+                        startVelocity: 0,
+                        ticks: 300,
+                        origin: {
+                            x: Math.random(),
+                            y: Math.random() * 0.2 - 0.2
+                        },
+                        shapes: ["text"],
+                        shapeOptions: { text: { value: ["✨", "🌙", "⭐", "💤"] } },
+                        scalar: 1.5,
+                        gravity: 0.4,
+                        drift: 0
+                    });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+            }
+            
+            // 6. 暴富组：钞票雨
+            if (/钱|发工资|暴富|穷|富/.test(text)) {
+                const duration = 2000;
+                const end = Date.now() + duration;
+                (function frame() {
+                    confetti({
+                        particleCount: 2,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        shapes: ["text"],
+                        shapeOptions: { text: { value: ["💸", "💰", "💵"] } },
+                        scalar: 2
+                    });
+                    confetti({
+                        particleCount: 2,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        shapes: ["text"],
+                        shapeOptions: { text: { value: ["💸", "💰", "💵"] } },
+                        scalar: 2
+                    });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+            }
+            
+            // 7. 宠物组：萌爪
+            if (/猫|咪|狗|汪/.test(text)) {
+                const defaults = { spread: 360, ticks: 100, gravity: 0, decay: 0.94, startVelocity: 30, shapes: ["text"], shapeOptions: { text: { value: ["🐾"] } }, scalar: 2 };
+                confetti({
+                    ...defaults, particleCount: 30, scalar: 2, origin: { x: 0.1, y: 1 }
+                });
+                confetti({
+                    ...defaults, particleCount: 30, scalar: 2, origin: { x: 0.9, y: 1 }
+                });
+            }
+        },
+
         async saveNote() {
             if (!this.newNote.text.trim() || this.isSaving) return;
 
@@ -626,6 +776,8 @@ createApp({
             try {
                 // 后台保存到数据库
                 const savedNote = await Storage.addNote(noteData);
+                // 触发彩蛋 (使用用户输入的原始文本)
+                this.checkEasterEgg(originalNote.text);
                 // 替换临时笔记为真实笔记
                 const index = this.notes.findIndex(n => n.id === tempNote.id);
                 if (index !== -1) {
