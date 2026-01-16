@@ -479,9 +479,7 @@ createApp({
 
         // 选择心情
         selectMood(mood) {
-            console.log('[选择心情] 当前心情:', this.newNote.mood, '选择的心情:', mood);
             this.newNote.mood = mood;
-            console.log('[选择心情] 更新后心情:', this.newNote.mood);
             // 稍等一下再关闭气泡，给用户视觉反馈
             setTimeout(() => {
                 this.showMoodSelector = false;
@@ -548,16 +546,24 @@ createApp({
                 timestamp: Date.now()
             };
 
-            // 调试日志
-            console.log('[保存笔记] 当前心情:', this.newNote.mood, '保存的心情:', noteData.mood);
-
             // 先保存原始数据副本，用于失败时回滚
             const originalNote = JSON.parse(JSON.stringify(this.newNote));
 
             // 乐观更新：立即添加到本地显示
+            // 如果有图片，使用第一张的预览图作为缩略图
+            const firstImagePreview = noteData.images && noteData.images.length > 0
+                ? (noteData.images[0].preview || noteData.images[0].data || noteData.images[0])
+                : null;
+
             const tempNote = {
                 id: 'temp_' + Date.now(),  // 临时ID
-                ...noteData
+                ...noteData,
+                // 覆盖 images 为兼容格式：第一张用预览图，其余保持原样
+                images: firstImagePreview
+                    ? [firstImagePreview, ...(noteData.images.slice(1).map(img =>
+                        typeof img === 'string' ? img : (img.preview || img.data || img)
+                      ))]
+                    : noteData.images
             };
             this.notes.unshift(tempNote);
 
