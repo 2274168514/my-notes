@@ -1331,3 +1331,308 @@ body {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+
+/* ============ 评论区样式 (iOS风格) ============ */
+
+/* 评论区容器 */
+.detail-comments-section {
+    margin-top: var(--spacing-lg);
+    border-top: 0.5px solid var(--separator);
+    padding-top: var(--spacing-md);
+}
+
+/* 评论折叠按钮 */
+.comments-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.comments-toggle-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.comments-toggle-title svg {
+    color: var(--text-secondary);
+}
+
+.comments-toggle .chevron {
+    transition: transform 0.3s ease;
+    color: var(--text-tertiary);
+}
+
+.comments-toggle .chevron.expanded {
+    transform: rotate(180deg);
+}
+
+/* 评论展开动画 */
+.comments-expand-enter-active,
+.comments-expand-leave-active {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.comments-expand-enter-from,
+.comments-expand-leave-to {
+    opacity: 0;
+    max-height: 0;
+}
+
+.comments-expand-enter-to,
+.comments-expand-leave-from {
+    opacity: 1;
+    max-height: 1000px;
+}
+
+/* 评论内容区 */
+.comments-content {
+    padding-top: var(--spacing-md);
+}
+
+/* 排序切换 */
+.comments-sort {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding: 4px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-medium);
+    width: fit-content;
+}
+
+.sort-btn {
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-small);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+    color: var(--text-primary);
+}
+
+.sort-btn.active {
+    background: var(--bg-secondary);
+    color: var(--ios-blue);
+    box-shadow: var(--shadow-1);
+}
+
+/* 评论列表 */
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    min-height: 80px;
+}
+
+/* 单个评论项 */
+.comment-item {
+    animation: comment-fade-in 0.3s ease;
+}
+
+@keyframes comment-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 评论气泡 */
+.comment-bubble {
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-md);
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.comment-bubble:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.comment-text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    margin: 0;
+    margin-bottom: var(--spacing-sm);
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+/* 评论元信息 */
+.comment-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.comment-time {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+/* 删除评论按钮 */
+.comment-delete {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-small);
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.comment-bubble:hover .comment-delete {
+    opacity: 1;
+}
+
+.comment-delete:hover {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--ios-red);
+}
+
+/* 评论空状态 */
+.comments-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) var(--spacing-md);
+    text-align: center;
+}
+
+.comments-empty svg {
+    color: var(--text-tertiary);
+    opacity: 0.3;
+    margin-bottom: var(--spacing-md);
+}
+
+.comments-empty p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* 评论输入区 */
+.comment-input-section {
+    padding-top: var(--spacing-md);
+    border-top: 0.5px solid var(--separator);
+}
+
+.comment-input-wrapper {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.comment-input {
+    flex: 1;
+    padding: 10px 16px;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: 20px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.comment-input:focus {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.comment-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* 发送按钮 */
+.comment-send-btn {
+    padding: 10px 20px;
+    background: var(--ios-blue);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.comment-send-btn:hover:not(.disabled) {
+    background: #0051D5;
+    transform: scale(1.02);
+}
+
+.comment-send-btn:active:not(.disabled) {
+    transform: scale(0.98);
+}
+
+.comment-send-btn.disabled {
+    background: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* 字数统计 */
+.comment-char-counter {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* 响应式 - 评论区 */
+@media (max-width: 600px) {
+    .comments-sort {
+        width: 100%;
+    }
+
+    .sort-btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    .comment-input-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .comment-send-btn {
+        width: 100%;
+    }
+
+    .comment-delete {
+        opacity: 1;
+    }
+}

@@ -53,7 +53,12 @@ createApp({
             page: 0,
             pageSize: 10,
             hasMore: true,
-            isLoadingMore: false
+            isLoadingMore: false,
+
+            // 评论功能
+            commentsExpanded: false,
+            newCommentText: '',
+            commentSortOrder: 'newest' // 'newest' 或 'oldest'
         };
     },
 
@@ -710,9 +715,148 @@ createApp({
         handleScroll() {
             // 距离底部 200px 时加载更多
             const bottomOfWindow = document.documentElement.scrollTop + window.innerHeight >= document.documentElement.offsetHeight - 200;
-            
+
             if (bottomOfWindow && this.hasMore && !this.isLoadingMore && !this.isLoading) {
                 this.loadMoreNotes();
+            }
+        },
+
+        // ==================== 评论功能 ====================
+
+        // 切换评论区展开/收起
+        toggleComments() {
+            this.commentsExpanded = !this.commentsExpanded;
+        },
+
+        // 获取当前选中笔记的评论列表
+        getSelectedNoteComments() {
+            if (!this.selectedNote || !this.selectedNote.comments) {
+                return [];
+            }
+            return this.selectedNote.comments;
+        },
+
+        // 获取排序后的评论列表
+        getSortedComments() {
+            const comments = [...this.getSelectedNoteComments()];
+            if (this.commentSortOrder === 'newest') {
+                return comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            } else {
+                return comments.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            }
+        },
+
+        // 格式化评论时间
+        formatCommentTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+
+            // 1分钟内
+            if (diff < 60000) {
+                return '刚刚';
+            }
+
+            // 1小时内
+            if (diff < 3600000) {
+                return `${Math.floor(diff / 60000)}分钟前`;
+            }
+
+            // 今天
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const commentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+            if (commentDate.getTime() === today.getTime()) {
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                return `今天 ${hours}:${minutes}`;
+            }
+
+            // 昨天
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (commentDate.getTime() === yesterday.getTime()) {
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                return `昨天 ${hours}:${minutes}`;
+            }
+
+            // 更早的日期
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
+        },
+
+        // 添加评论
+        async addComment() {
+            const text = this.newCommentText.trim();
+            if (!text || !this.selectedNote) return;
+
+            const newComment = {
+                id: 'comment_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                text: text,
+                timestamp: new Date().toISOString()
+            };
+
+            // 确保评论数组存在
+            if (!this.selectedNote.comments) {
+                this.selectedNote.comments = [];
+            }
+
+            // 乐观更新：立即添加到本地显示
+            this.selectedNote.comments.push(newComment);
+            this.newCommentText = '';
+
+            // 保存到数据库
+            try {
+                await Storage.updateNote(this.selectedNote.id, {
+                    comments: [...this.selectedNote.comments]
+                });
+                // 重新加载笔记以同步数据
+                await this.loadNotes();
+            } catch (error) {
+                console.error('添加评论失败:', error);
+                // 回滚：移除刚刚添加的评论
+                const index = this.selectedNote.comments.findIndex(c => c.id === newComment.id);
+                if (index > -1) {
+                    this.selectedNote.comments.splice(index, 1);
+                }
+                this.newCommentText = text; // 恢复输入内容
+                alert('添加评论失败，请重试');
+            }
+        },
+
+        // 删除评论
+        async deleteComment(commentId) {
+            if (!this.selectedNote || !this.selectedNote.comments) return;
+
+            // 找到要删除的评论
+            const commentIndex = this.selectedNote.comments.findIndex(c => c.id === commentId);
+            if (commentIndex === -1) return;
+
+            // 保存原评论用于回滚
+            const deletedComment = this.selectedNote.comments[commentIndex];
+
+            // 乐观更新：立即从本地移除
+            this.selectedNote.comments.splice(commentIndex, 1);
+
+            // 保存到数据库
+            try {
+                await Storage.updateNote(this.selectedNote.id, {
+                    comments: [...this.selectedNote.comments]
+                });
+                // 重新加载笔记以同步数据
+                await this.loadNotes();
+            } catch (error) {
+                console.error('删除评论失败:', error);
+                // 回滚：恢复评论
+                this.selectedNote.comments.splice(commentIndex, 0, deletedComment);
+                alert('删除评论失败，请重试');
             }
         }
     }
