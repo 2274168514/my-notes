@@ -49,6 +49,162 @@
     --bg-sunny: rgba(255, 149, 0, 0.05);
     --bg-cloudy: rgba(0, 122, 255, 0.05); /* 恢复为蓝色背景 */
     --bg-rainy: rgba(88, 86, 214, 0.05);
+
+    /* 动画时长变量 */
+    --anim-fast: 0.2s;
+    --anim-medium: 0.3s;
+    --anim-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --anim-ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+/* ... (body and #app styles remain unchanged) ... */
+
+/* 关键帧动画定义 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.9); opacity: 0; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    14% { transform: scale(1.3); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.3); }
+    70% { transform: scale(1); }
+}
+
+@keyframes floatUp {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+    100% { transform: translateY(0); }
+}
+
+/* 笔记卡片进入动画 - 更有层次感 */
+.note-card {
+    /* ... existing styles ... */
+    animation: fadeInUp var(--anim-medium) var(--anim-ease-out) backwards;
+}
+
+/* 为前10个卡片添加交错延迟，营造流水般的加载感 */
+.note-card:nth-child(1) { animation-delay: 0.05s; }
+.note-card:nth-child(2) { animation-delay: 0.1s; }
+.note-card:nth-child(3) { animation-delay: 0.15s; }
+.note-card:nth-child(4) { animation-delay: 0.2s; }
+.note-card:nth-child(5) { animation-delay: 0.25s; }
+.note-card:nth-child(6) { animation-delay: 0.3s; }
+.note-card:nth-child(7) { animation-delay: 0.35s; }
+.note-card:nth-child(8) { animation-delay: 0.4s; }
+.note-card:nth-child(9) { animation-delay: 0.45s; }
+.note-card:nth-child(10) { animation-delay: 0.5s; }
+
+/* 交互反馈优化 */
+
+/* 1. 按钮点击的 Q 弹效果 */
+.icon-btn, .header-btn, .compose-btn, .retry-btn, .filter-option, .tag-chip, .default-tag-chip {
+    transition: transform var(--anim-fast) var(--anim-bounce), 
+                background-color var(--anim-fast) ease, 
+                opacity var(--anim-fast) ease !important;
+}
+
+.icon-btn:active, .header-btn:active, .compose-btn:active, .retry-btn:active, .filter-option:active {
+    transform: scale(0.92) !important;
+}
+
+/* 2. 点赞按钮的心跳特效 */
+.like-btn {
+    transition: transform var(--anim-fast) var(--anim-bounce), color 0.2s ease;
+}
+
+.like-btn:active {
+    transform: scale(0.8);
+}
+
+.like-btn.active svg {
+    animation: heartBeat 0.6s ease-in-out;
+}
+
+/* 3. 模态弹窗的柔和缩放进出 */
+.modal-enter-active, .modal-leave-active {
+    transition: all 0.4s var(--anim-bounce); /* 使用更有弹性的缓动 */
+}
+
+.modal-enter-from, .modal-leave-to {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+}
+
+.modal-enter-from .compose-modal, .modal-leave-to .compose-modal,
+.modal-enter-from .detail-modal, .modal-leave-to .detail-modal,
+.modal-enter-from .filter-modal, .modal-leave-to .filter-modal {
+    transform: scale(0.9) translateY(20px); /* 增加一点位移，更生动 */
+    opacity: 0;
+}
+
+.modal-enter-to .compose-modal,
+.modal-enter-to .detail-modal,
+.modal-enter-to .filter-modal {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* 4. 图片 hover 时的轻微浮动 */
+.card-image, .detail-image {
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.card-image:hover {
+    transform: scale(1.02);
+    filter: brightness(1.02);
+}
+
+/* 5. 导航栏标题的入场 */
+.nav-title {
+    animation: popIn 0.5s var(--anim-bounce) backwards;
+}
+
+/* 6. 卡片 Hover 的阴影加深过渡更平滑 */
+.card-inner {
+    /* ... existing styles ... */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* 更跟手的缓动 */
+}
+
+.note-card:hover .card-inner {
+    transform: translateY(-2px); /* 轻微上浮 */
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12); /* 阴影扩散更柔和 */
+}
+
+/* 7. 评论列表的顺滑展开 */
+.comments-list {
+    /* 移除 min-height 防止跳动 */
+    /* min-height: 80px; */ 
+}
+
+.comment-item {
+    animation: fadeInUp 0.4s var(--anim-ease-out) backwards;
+}
+
+/* 评论逐个进入 */
+.comment-item:nth-child(1) { animation-delay: 0.05s; }
+.comment-item:nth-child(2) { animation-delay: 0.1s; }
+.comment-item:nth-child(3) { animation-delay: 0.15s; }
+
+/* 8. 标签 Hover 效果增强 */
+.card-tag:hover {
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
 }
 
 * {
@@ -239,8 +395,10 @@ body {
     width: 206px;
     flex-shrink: 0;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);  <-- Removed old transition */
+    transition: transform var(--anim-medium) var(--anim-ease-out); /* 使用新定义的平滑缓动 */
     padding-top: 8px;
+    /* animation: fadeInUp ... (defined at top) */
 }
 
 .note-card.has-image {
@@ -392,12 +550,14 @@ body {
     overflow: hidden;
     box-shadow: var(--shadow-1);
     border: 0.5px solid var(--separator);
-    transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1); <-- Removed old transition */
+    transition: all var(--anim-medium) cubic-bezier(0.25, 0.8, 0.25, 1); /* 更跟手的悬停效果 */
     position: relative;
 }
 
 .note-card:hover .card-inner {
     box-shadow: var(--shadow-3);
+    /* transform is handled by .note-card:hover .card-inner definition at top */
 }
 
 .card-header {
@@ -665,27 +825,24 @@ body {
     justify-content: center;
     z-index: 1000;
     padding: 20px;
+    /* 优化过渡效果，使其更平滑 */
+    transition: background-color 0.4s ease, backdrop-filter 0.4s ease;
 }
 
-.modal-enter-active, .modal-leave-active {
-    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
+/* 复用上面的 .modal-enter-active 等定义，这里删除重复或冲突的旧定义，保持代码整洁 */
+/* .modal-enter-active, .modal-leave-active { ... } (已在顶部定义) */
 
-.modal-enter-from, .modal-leave-to {
-    opacity: 0;
-}
+/* 
+.modal-enter-from, .modal-leave-to { ... } (已在顶部定义) 
+*/
 
-.modal-enter-from .compose-modal, .modal-leave-to .compose-modal,
-.modal-enter-from .detail-modal, .modal-leave-to .detail-modal {
-    transform: scale(0.9);
-    opacity: 0;
-}
+/* 
+.modal-enter-from .compose-modal, ... { ... } (已在顶部定义)
+*/
 
-.modal-enter-to .compose-modal, .modal-leave-to .compose-modal,
-.modal-enter-to .detail-modal, .modal-leave-to .detail-modal {
-    transform: scale(1);
-    opacity: 1;
-}
+/* 
+.modal-enter-to .compose-modal, ... { ... } (已在顶部定义)
+*/
 
 /* 撰写弹窗 - 居中显示 */
 .compose-modal {
