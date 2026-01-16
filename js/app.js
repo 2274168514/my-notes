@@ -526,6 +526,11 @@ createApp({
             // 关闭详情弹窗
             this.closeDetailModal();
 
+            // 如果是临时笔记，不需要删除数据库
+            if (noteId.startsWith('temp_')) {
+                return;
+            }
+
             // 后台删除数据库中的笔记
             try {
                 await Storage.deleteNote(noteId);
