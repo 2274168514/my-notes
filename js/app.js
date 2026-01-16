@@ -620,10 +620,10 @@ createApp({
         async deleteCurrentNote() {
             if (!this.selectedNote) return;
 
-            const noteId = this.selectedNote.id;
+            const noteId = String(this.selectedNote.id); // 确保是字符串
 
             // 乐观更新：立即从本地移除
-            const index = this.notes.findIndex(n => n.id === noteId);
+            const index = this.notes.findIndex(n => String(n.id) === noteId);
             if (index > -1) {
                 this.notes.splice(index, 1);
             }
@@ -638,7 +638,7 @@ createApp({
 
             // 后台删除数据库中的笔记
             try {
-                await Storage.deleteNote(noteId);
+                await Storage.deleteNote(this.selectedNote.id); // 传原始 ID 给后台，以防后台需要数字
             } catch (error) {
                 console.error('删除失败:', error);
                 // 回滚：恢复笔记
