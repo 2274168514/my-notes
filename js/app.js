@@ -515,12 +515,24 @@ createApp({
         async deleteCurrentNote() {
             if (!this.selectedNote) return;
 
+            const noteId = this.selectedNote.id;
+
+            // 乐观更新：立即从本地移除
+            const index = this.notes.findIndex(n => n.id === noteId);
+            if (index > -1) {
+                this.notes.splice(index, 1);
+            }
+
+            // 关闭详情弹窗
+            this.closeDetailModal();
+
+            // 后台删除数据库中的笔记
             try {
-                await Storage.deleteNote(this.selectedNote.id);
-                await this.loadNotes();
-                this.closeDetailModal();
+                await Storage.deleteNote(noteId);
             } catch (error) {
                 console.error('删除失败:', error);
+                // 回滚：恢复笔记
+                await this.loadNotes();
                 alert('删除失败，请重试');
             }
         },
