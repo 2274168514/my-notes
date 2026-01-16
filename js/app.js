@@ -135,18 +135,31 @@ createApp({
             this.loadingText = '正在启动...';
             this.loadLocalLikedNotes();
 
-            // 等待 Supabase 初始化完成
-            await Storage.init();
+            // 等待 Supabase 初始化完成（添加超时处理）
+            this.loadingText = '正在连接数据库...';
+
+            // 设置超时：如果 10 秒内无法连接，显示错误
+            const initTimeout = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('连接超时')), 10000)
+            );
+
+            await Promise.race([Storage.init(), initTimeout]);
 
             // 加载笔记
             this.loadingText = '正在加载笔记...';
             await this.loadNotes();
-            
+
             // 添加滚动监听实现无限加载
             window.addEventListener('scroll', this.handleScroll);
         } catch (error) {
             console.error('初始化失败:', error);
-            this.loadError = '网络连接异常，请刷新重试';
+            if (error.message === '连接超时') {
+                this.loadError = '数据库连接超时，请检查网络或稍后重试';
+            } else if (error.message.includes('Supabase')) {
+                this.loadError = '无法连接到数据库，请稍后重试';
+            } else {
+                this.loadError = '加载失败: ' + (error.message || '请刷新重试');
+            }
             this.isLoading = false;
         }
     },
