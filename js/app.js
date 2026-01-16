@@ -1,6 +1,14 @@
 // Vue 应用 - iOS 17 风格时间线笔记
 const { createApp } = Vue;
 
+// 全局未捕获 Promise 处理
+window.addEventListener('unhandledrejection', (event) => {
+    // 阻止错误输出到控制台
+    event.preventDefault();
+    // 可选：记录错误到控制台（不会显示为未捕获错误）
+    console.warn('未处理的 Promise 已被捕获:', event.reason);
+});
+
 createApp({
     data() {
         return {
@@ -158,10 +166,10 @@ createApp({
             console.error('初始化失败:', error);
             if (error.message === '连接超时') {
                 this.loadError = '数据库连接超时，请检查网络或稍后重试';
-            } else if (error.message.includes('Supabase')) {
+            } else if (error.message && error.message.includes('Supabase')) {
                 this.loadError = '无法连接到数据库，请稍后重试';
             } else {
-                this.loadError = '加载失败: ' + (error.message || '请刷新重试');
+                this.loadError = '加载失败，请检查网络连接';
             }
             this.isLoading = false;
         }
