@@ -215,11 +215,28 @@
                             </span>/280
                         </div>
 
-                        <!-- 图片预览区 -->
-                        <div v-if="newNote.images && newNote.images.length" class="images-attachment">
-                            <div v-for="(img, index) in newNote.images" :key="index" class="image-preview-item">
+                        <!-- 图片预览区 - 九宫格布局支持拖拽排序 -->
+                        <div v-if="newNote.images && newNote.images.length" class="images-attachment" :class="`images-count-${Math.min(newNote.images.length, 9)}`">
+                            <div
+                                v-for="(img, index) in newNote.images"
+                                :key="index"
+                                class="image-preview-item"
+                                :data-index="index"
+                            >
                                 <img :src="img.preview" alt="">
-                                <button class="remove-attachment" @click="removeImage(index)">×</button>
+                                <div class="image-overlay">
+                                    <button class="remove-attachment" @click="removeImage(index)">×</button>
+                                    <div class="drag-handle">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="9" cy="6" r="1.5" fill="currentColor"/>
+                                            <circle cx="15" cy="6" r="1.5" fill="currentColor"/>
+                                            <circle cx="9" cy="12" r="1.5" fill="currentColor"/>
+                                            <circle cx="15" cy="12" r="1.5" fill="currentColor"/>
+                                            <circle cx="9" cy="18" r="1.5" fill="currentColor"/>
+                                            <circle cx="15" cy="18" r="1.5" fill="currentColor"/>
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -545,8 +562,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
     <script src="js/storage.js" defer></script>
-    <script src="js/app.js?v=2025011602" defer></script>
+    <script src="js/app.js?v=2025011603" defer></script>
 
 </body>
 </html>

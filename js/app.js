@@ -58,7 +58,10 @@ createApp({
             // 评论功能
             commentsExpanded: false,
             newCommentText: '',
-            commentSortOrder: 'newest' // 'newest' 或 'oldest'
+            commentSortOrder: 'newest', // 'newest' 或 'oldest'
+
+            // 图片拖拽排序实例
+            imageSortable: null
         };
     },
 
@@ -255,6 +258,8 @@ createApp({
                 if (this.$refs.composeTextarea) {
                     this.$refs.composeTextarea.focus();
                 }
+                // 初始化图片拖拽排序
+                this.initImageSortable();
             });
         },
 
@@ -262,6 +267,11 @@ createApp({
         closeComposeModal() {
             this.showComposeModal = false;
             this.resetNewNote();
+            // 销毁图片拖拽排序实例
+            if (this.imageSortable) {
+                this.imageSortable.destroy();
+                this.imageSortable = null;
+            }
         },
 
         // 打开笔记详情
@@ -375,6 +385,39 @@ createApp({
         // 移除图片
         removeImage(index) {
             this.newNote.images.splice(index, 1);
+            // 重新初始化拖拽排序
+            this.$nextTick(() => {
+                this.initImageSortable();
+            });
+        },
+
+        // 初始化图片拖拽排序
+        initImageSortable() {
+            // 先销毁旧实例
+            if (this.imageSortable) {
+                this.imageSortable.destroy();
+            }
+
+            // 找到图片容器
+            const container = document.querySelector('.images-attachment');
+            if (!container) return;
+
+            // 初始化 Sortable
+            this.imageSortable = new Sortable(container, {
+                animation: 200, // 动画时长
+                handle: '.image-preview-item', // 整个图片项都可拖拽
+                ghostClass: 'sortable-ghost', // 拖拽占位符样式
+                dragClass: 'sortable-drag', // 拖拽元素样式
+                onEnd: (evt) => {
+                    // 拖拽结束后更新数据
+                    const { oldIndex, newIndex } = evt;
+                    if (oldIndex !== newIndex) {
+                        // 移动数组元素
+                        const item = this.newNote.images.splice(oldIndex, 1)[0];
+                        this.newNote.images.splice(newIndex, 0, item);
+                    }
+                }
+            });
         },
 
         // 添加标签
