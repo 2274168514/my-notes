@@ -1036,18 +1036,80 @@ body {
 }
 
 .detail-images {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
 }
 
-.detail-image {
-    width: 100%;
-    max-height: 400px;
-    object-fit: contain;
+/* 单张图片 - 居中显示，尺寸适中 */
+.images-count-1 {
+    display: flex;
+    justify-content: center;
+}
+
+.images-count-1 .detail-image {
+    max-width: 60%;
+    max-height: 350px;
+    width: auto;
+    height: auto;
     border-radius: var(--radius-large);
+}
+
+/* 2张图片 - 1x2 布局 */
+.images-count-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+}
+
+/* 3张图片 - 1x3 布局 */
+.images-count-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+/* 4张图片 - 2x2 布局 */
+.images-count-4 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+}
+
+/* 5-9张图片 - 3x3 布局 */
+.images-count-5,
+.images-count-6,
+.images-count-7,
+.images-count-8,
+.images-count-9 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+/* 多张图片时的通用样式 */
+.images-count-2 .detail-image,
+.images-count-3 .detail-image,
+.images-count-4 .detail-image,
+.images-count-5 .detail-image,
+.images-count-6 .detail-image,
+.images-count-7 .detail-image,
+.images-count-8 .detail-image,
+.images-count-9 .detail-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 8px;
     background: var(--bg-tertiary);
+}
+
+/* 兼容旧版本单张图片（image 字段） */
+.detail-image-single {
+    max-width: 60%;
+    max-height: 350px;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: var(--radius-large);
 }
 
 .detail-tags {
@@ -1182,6 +1244,29 @@ body {
 
     .note-card.has-image {
         width: calc((100% - 12px) / 2);
+    }
+
+    /* 详情页图片九宫格 - 手机端优化 */
+    .images-count-1 .detail-image {
+        max-width: 80%;
+        max-height: 250px;
+    }
+
+    .detail-image-single {
+        max-width: 80%;
+        max-height: 250px;
+    }
+
+    /* 手机端多张图片保持3x3布局，但调整间距 */
+    .images-count-2,
+    .images-count-3,
+    .images-count-4,
+    .images-count-5,
+    .images-count-6,
+    .images-count-7,
+    .images-count-8,
+    .images-count-9 {
+        gap: 3px;
     }
 }
 

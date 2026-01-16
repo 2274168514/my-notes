@@ -331,11 +331,11 @@
                     <div class="detail-content" v-if="selectedNote">
                         <p class="detail-text">{{ selectedNote.text }}</p>
 
-                        <!-- 所有图片 - 兼容新旧数据 -->
-                        <div v-if="selectedNote.images && selectedNote.images.length" class="detail-images">
+                        <!-- 所有图片 - 九宫格布局 -->
+                        <div v-if="selectedNote.images && selectedNote.images.length" class="detail-images" :class="`images-count-${Math.min(selectedNote.images.length, 9)}`">
                             <img v-for="(img, index) in selectedNote.images" :key="index" :src="img" class="detail-image" alt="">
                         </div>
-                        <img v-else-if="selectedNote.image" :src="selectedNote.image" class="detail-image" alt="">
+                        <img v-else-if="selectedNote.image" :src="selectedNote.image" class="detail-image detail-image-single" alt="">
 
                         <!-- 标签编辑区 -->
                         <div class="detail-tags-edit">
@@ -546,7 +546,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
     <script src="js/storage.js" defer></script>
-    <script src="js/app.js?v=20250116" defer></script>
+    <script src="js/app.js?v=2025011602" defer></script>
 
 </body>
 </html>
