@@ -370,7 +370,7 @@
                                 <!-- 心情图标 -->
                                 <div class="mood-icon-detail" :class="selectedNote.mood || 'cloudy'">
                                     <svg width="18" height="18">
-                                        <use :href="`#icon-${selectedNote.mood || 'cloudy'}`"></use>
+                                        <use :href="'#icon-' + (selectedNote.mood || 'cloudy')"></use>
                                     </svg>
                                 </div>
                                 <span class="detail-date">{{ formatDetailTime(selectedNote.timestamp) }}</span>
