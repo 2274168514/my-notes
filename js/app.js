@@ -812,19 +812,26 @@ createApp({
             this.selectedNote.comments.push(newComment);
             this.newCommentText = '';
 
-            // 保存到数据库
+            // 同时更新 notes 数组中的对应笔记
+            const noteIndex = this.notes.findIndex(n => n.id === this.selectedNote.id);
+            if (noteIndex > -1) {
+                this.notes[noteIndex].comments = [...this.selectedNote.comments];
+            }
+
+            // 保存到数据库（后台执行，不阻塞界面）
             try {
                 await Storage.updateNote(this.selectedNote.id, {
                     comments: [...this.selectedNote.comments]
                 });
-                // 重新加载笔记以同步数据
-                await this.loadNotes();
             } catch (error) {
                 console.error('添加评论失败:', error);
                 // 回滚：移除刚刚添加的评论
                 const index = this.selectedNote.comments.findIndex(c => c.id === newComment.id);
                 if (index > -1) {
                     this.selectedNote.comments.splice(index, 1);
+                }
+                if (noteIndex > -1) {
+                    this.notes[noteIndex].comments = [...this.selectedNote.comments];
                 }
                 this.newCommentText = text; // 恢复输入内容
                 alert('添加评论失败，请重试');
@@ -845,17 +852,24 @@ createApp({
             // 乐观更新：立即从本地移除
             this.selectedNote.comments.splice(commentIndex, 1);
 
-            // 保存到数据库
+            // 同时更新 notes 数组中的对应笔记
+            const noteIndex = this.notes.findIndex(n => n.id === this.selectedNote.id);
+            if (noteIndex > -1) {
+                this.notes[noteIndex].comments = [...this.selectedNote.comments];
+            }
+
+            // 保存到数据库（后台执行，不阻塞界面）
             try {
                 await Storage.updateNote(this.selectedNote.id, {
                     comments: [...this.selectedNote.comments]
                 });
-                // 重新加载笔记以同步数据
-                await this.loadNotes();
             } catch (error) {
                 console.error('删除评论失败:', error);
                 // 回滚：恢复评论
                 this.selectedNote.comments.splice(commentIndex, 0, deletedComment);
+                if (noteIndex > -1) {
+                    this.notes[noteIndex].comments = [...this.selectedNote.comments];
+                }
                 alert('删除评论失败，请重试');
             }
         }
