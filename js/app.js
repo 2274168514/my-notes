@@ -83,7 +83,10 @@ createApp({
             pullRefreshText: '下拉刷新',
             pullRefreshStartY: 0,
             pullRefreshCurrentY: 0,
-            isPulling: false
+            isPulling: false,
+            pullRefreshCount: 0,          // 下拉次数计数器
+            pullRefreshTimer: null,        // 重置计时器
+            pullRefreshRequiredCount: 2    // 需要下拉的次数
         };
     },
 
@@ -1109,10 +1112,18 @@ createApp({
 
                 // 更新状态
                 if (pullDistance >= 60) {
-                    this.pullRefreshText = '释放立即刷新';
+                    if (this.pullRefreshCount + 1 >= this.pullRefreshRequiredCount) {
+                        this.pullRefreshText = '释放立即刷新';
+                    } else {
+                        this.pullRefreshText = `再下拉${this.pullRefreshRequiredCount - this.pullRefreshCount - 1}次即可刷新`;
+                    }
                     this.pullRefreshRotate = true;
                 } else {
-                    this.pullRefreshText = '下拉刷新';
+                    if (this.pullRefreshCount > 0) {
+                        this.pullRefreshText = `已下拉${this.pullRefreshCount}次，再下拉${this.pullRefreshRequiredCount - this.pullRefreshCount}次`;
+                    } else {
+                        this.pullRefreshText = '下拉刷新';
+                    }
                     this.pullRefreshRotate = false;
                 }
             }
@@ -1124,11 +1135,28 @@ createApp({
 
             this.isPulling = false;
 
-            // 如果拉动距离足够，执行刷新
+            // 如果拉动距离足够，增加计数
             if (this.pullRefreshTranslateY >= 0) {
-                await this.doPullRefresh();
+                this.pullRefreshCount++;
+
+                // 如果达到所需次数，执行刷新
+                if (this.pullRefreshCount >= this.pullRefreshRequiredCount) {
+                    await this.doPullRefresh();
+                } else {
+                    // 未达到次数，重置位置但保留计数
+                    this.pullRefreshTranslateY = -60;
+
+                    // 设置3秒后重置计数器
+                    if (this.pullRefreshTimer) {
+                        clearTimeout(this.pullRefreshTimer);
+                    }
+                    this.pullRefreshTimer = setTimeout(() => {
+                        this.pullRefreshCount = 0;
+                        this.pullRefreshText = '下拉刷新';
+                    }, 3000);
+                }
             } else {
-                // 重置状态
+                // 未达到阈值，重置状态
                 this.resetPullRefresh();
             }
         },
@@ -1165,6 +1193,13 @@ createApp({
             this.pullRefreshTranslateY = -60;
             this.pullRefreshRotate = false;
             this.pullRefreshText = '下拉刷新';
+            this.pullRefreshCount = 0;
+
+            // 清除计时器
+            if (this.pullRefreshTimer) {
+                clearTimeout(this.pullRefreshTimer);
+                this.pullRefreshTimer = null;
+            }
         }
     }
 }).mount('#app');
