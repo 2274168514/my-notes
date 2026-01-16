@@ -228,20 +228,44 @@ createApp({
 
         // 加载笔记（第一页）
         async loadNotes() {
+            // 0. 优先加载本地缓存，实现"秒开"体验
+            try {
+                const cached = localStorage.getItem('aonao_notes_cache');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    // 只有当本地没有数据时，才使用缓存填充，或者总是优先显示缓存
+                    if (parsed && parsed.length > 0) {
+                        console.log('加载本地缓存笔记:', parsed.length);
+                        // 恢复 liked 状态
+                        this.notes = parsed.map(note => ({
+                            ...note,
+                            liked: this.localLikedNotes.has(note.id)
+                        }));
+                        this.loadingText = '正在更新最新数据...';
+                    }
+                }
+            } catch (e) {
+                console.warn('读取缓存失败:', e);
+            }
+
             // 尝试确保 Supabase 已初始化
             try {
                 await Storage.init();
             } catch (e) {
                 console.warn('尝试初始化 Supabase 失败:', e);
                 // 不阻断，让下面的 fetchNotes 报更具体的错，或者在这里显示错误
-                this.loadError = '初始化失败: ' + (e.message || '网络异常');
-                this.isLoading = false;
-                return; // 如果初始化都挂了，就别查数据了
+                // 如果有缓存，就不显示全屏错误，而是静默失败或顶部提示
+                if (this.notes.length === 0) {
+                    this.loadError = '初始化失败: ' + (e.message || '网络异常');
+                    this.isLoading = false;
+                }
+                return; 
             }
 
             this.page = 0;
             this.hasMore = true;
-            this.notes = []; // 清空现有笔记
+            // 注意：这里不要立即清空 this.notes，否则会闪屏。
+            // 应该在 fetchNotes 成功后再替换。
             await this.fetchNotes();
         },
 
@@ -269,6 +293,12 @@ createApp({
                     this.notes = [...this.notes, ...newNotes];
                 } else {
                     this.notes = newNotes;
+                    // 刷新成功后，更新本地缓存（只缓存第一页，防止数据过大）
+                    try {
+                        localStorage.setItem('aonao_notes_cache', JSON.stringify(this.notes));
+                    } catch (e) {
+                        console.warn('写入缓存失败:', e);
+                    }
                 }
                 
                 this.hasMore = result.hasMore;
@@ -277,8 +307,15 @@ createApp({
             } catch (error) {
                 console.error('加载笔记失败:', error);
                 if (!isAppend) {
-                    this.loadError = '加载失败: ' + error.message;
-                    this.isLoading = false;
+                    // 如果是第一页加载失败
+                    if (this.notes.length > 0) {
+                        // 如果有缓存数据，则不显示全屏错误，而是改为 Toast 提示（这里简单用 console）
+                        console.log('使用离线缓存数据展示');
+                        this.isLoading = false; 
+                    } else {
+                        this.loadError = '加载失败: ' + error.message;
+                        this.isLoading = false;
+                    }
                 }
             }
         },
