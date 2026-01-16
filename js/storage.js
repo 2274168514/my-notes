@@ -162,6 +162,7 @@ const Storage = (function() {
                 text: String(note.text || ''),
                 images: imageUrls,
                 tags: Array.isArray(note.tags) ? note.tags : (note.tags ? String(note.tags).split(',').filter(t => t) : []),
+                mood: note.mood || 'cloudy', // 确保保存 mood 字段
                 timestamp: note.timestamp || Date.now(),
                 favorite: false,
                 likecount: 0
