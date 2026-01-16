@@ -391,6 +391,11 @@ createApp({
             });
         },
 
+        // 触发图片上传
+        triggerImageUpload() {
+            this.$refs.fileInput.click();
+        },
+
         // 初始化图片拖拽排序
         initImageSortable() {
             // 先销毁旧实例

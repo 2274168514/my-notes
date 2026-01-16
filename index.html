@@ -224,19 +224,7 @@
                                 :data-index="index"
                             >
                                 <img :src="img.preview" alt="">
-                                <div class="image-overlay">
-                                    <button class="remove-attachment" @click="removeImage(index)">×</button>
-                                    <div class="drag-handle">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                            <circle cx="9" cy="6" r="1.5" fill="currentColor"/>
-                                            <circle cx="15" cy="6" r="1.5" fill="currentColor"/>
-                                            <circle cx="9" cy="12" r="1.5" fill="currentColor"/>
-                                            <circle cx="15" cy="12" r="1.5" fill="currentColor"/>
-                                            <circle cx="9" cy="18" r="1.5" fill="currentColor"/>
-                                            <circle cx="15" cy="18" r="1.5" fill="currentColor"/>
-                                        </svg>
-                                    </div>
-                                </div>
+                                <button class="remove-attachment" @click="removeImage(index)">×</button>
                             </div>
                         </div>
 
@@ -269,12 +257,12 @@
 
                     <div class="compose-toolbar">
                         <!-- 图片上传按钮 -->
-                        <label class="toolbar-btn">
-                            <input type="file" accept="image/*" multiple @change="handleImageUpload" class="hidden-input">
+                        <button class="toolbar-btn" @click="triggerImageUpload">
+                            <input type="file" ref="fileInput" accept="image/*" multiple @change="handleImageUpload" class="hidden-input">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                                 <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                        </label>
+                        </button>
                         
                         <!-- 标签按钮 -->
                         <button class="toolbar-btn" @click="focusTagInput">

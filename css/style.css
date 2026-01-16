@@ -830,72 +830,38 @@ body {
     max-height: 200px;
 }
 
-/* 图片覆盖层（包含删除按钮和拖拽手柄） */
-.image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    pointer-events: none;
-}
-
-.image-preview-item:hover .image-overlay {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* 拖拽手柄 */
-.drag-handle {
-    position: absolute;
-    bottom: 6px;
-    right: 6px;
-    width: 28px;
-    height: 28px;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    cursor: grab;
-}
-
-.drag-handle:active {
-    cursor: grabbing;
-}
-
-.drag-handle svg {
-    pointer-events: none;
-}
-
-/* 删除按钮 */
+/* 删除按钮 - 桌面端悬停显示 */
 .remove-attachment {
     position: absolute;
     top: 6px;
     right: 6px;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border: none;
-    background: rgba(255, 59, 48, 0.9);
+    background: rgba(0, 0, 0, 0.6);
     border-radius: 50%;
-    box-shadow: var(--shadow-2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
     font-size: 18px;
     font-weight: bold;
     line-height: 1;
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.image-preview-item:hover .remove-attachment {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .remove-attachment:hover {
     background: var(--ios-red);
-    transform: scale(1.1);
+    transform: scale(1.15) !important;
 }
 
 /* Sortable 拖拽中的样式 */
@@ -907,6 +873,7 @@ body {
     opacity: 1;
     transform: scale(1.05);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
 }
 
 /* 手机端触摸优化 */
@@ -941,17 +908,11 @@ body {
         gap: 3px;
     }
 
-    /* 手机端始终显示删除按钮和拖拽手柄 */
-    .image-overlay {
+    /* 手机端始终显示删除按钮 */
+    .remove-attachment {
         opacity: 1;
-        background: linear-gradient(
-            to bottom,
-            rgba(0, 0, 0, 0.3) 0%,
-            transparent 30%,
-            transparent 70%,
-            rgba(0, 0, 0, 0.4) 100%
-        );
-        pointer-events: auto;
+        transform: scale(1);
+        background: rgba(0, 0, 0, 0.5);
     }
 }
 
