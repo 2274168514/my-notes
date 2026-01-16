@@ -326,6 +326,7 @@ body {
 /* ============ 下拉刷新 ============ */
 
 .pull-to-refresh {
+    display: none !important;
     position: absolute;
     top: 0;
     left: 0;

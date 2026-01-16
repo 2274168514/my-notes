@@ -184,7 +184,7 @@ createApp({
             window.addEventListener('keydown', this.handleKeydown);
 
             // 添加下拉刷新 touch 事件监听
-            this.setupPullToRefresh();
+            
         } catch (error) {
             console.error('初始化失败:', error);
             if (error.message === '连接超时') {
