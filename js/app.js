@@ -756,6 +756,16 @@ createApp({
         // 切换评论区展开/收起
         toggleComments() {
             this.commentsExpanded = !this.commentsExpanded;
+
+            // 如果是展开，自动滚动到评论区
+            if (this.commentsExpanded) {
+                this.$nextTick(() => {
+                    const commentsSection = document.querySelector('.detail-comments-section');
+                    if (commentsSection) {
+                        commentsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                });
+            }
         },
 
         // 获取当前选中笔记的评论列表
