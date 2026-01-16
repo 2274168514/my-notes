@@ -8,31 +8,6 @@ const Storage = (function() {
     let _client = null;
     let _initPromise = null;
 
-    // 等待 Supabase 库加载（最多等待 5 秒）
-    function waitForSupabase() {
-        return new Promise((resolve, reject) => {
-            if (window.supabase) {
-                console.log('[Storage] Supabase 已加载');
-                resolve();
-            } else {
-                console.log('[Storage] 等待 Supabase 库加载...');
-                let attempts = 0;
-                const maxAttempts = 50;  // 5 秒
-                const checkInterval = setInterval(() => {
-                    attempts++;
-                    if (window.supabase) {
-                        clearInterval(checkInterval);
-                        const duration = (attempts * 0.1).toFixed(1);
-                        console.log('[Storage] Supabase 库加载成功，耗时:', duration, '秒');
-                        resolve();
-                    } else if (attempts >= maxAttempts) {
-                        clearInterval(checkInterval);
-                        reject(new Error('Supabase 库加载超时，请检查网络连接'));
-                    }
-                }, 100);
-            }
-        });
-    }
 
     // 获取 Supabase 客户端
     function getClient() {
@@ -127,16 +102,31 @@ const Storage = (function() {
     return {
         // 初始化
         async init() {
+            // 如果之前没有初始化过，或者初始化失败了（这里可以根据需要增加状态判断）
             if (!_initPromise) {
-                _initPromise = waitForSupabase().then(() => {
-                    if (!window.supabase) {
-                        throw new Error('Supabase 库加载失败');
+                _initPromise = new Promise((resolve, reject) => {
+                    if (window.supabase) {
+                        try {
+                            _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                            console.log('[Storage] Supabase 初始化成功');
+                            resolve();
+                        } catch (e) {
+                            _initPromise = null; // 初始化失败，允许重试
+                            reject(e);
+                        }
+                    } else {
+                        _initPromise = null; // SDK没加载，允许重试
+                        reject(new Error('Supabase SDK 未加载，请检查网络'));
                     }
-                    _client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    console.log('[Storage] Supabase 初始化成功');
                 });
             }
-            return _initPromise;
+            // 如果Promise失败了，我们需要捕获它并允许重试机制生效
+            // 但为了简单，这里我们让调用者处理错误。
+            // 关键是上面的 reject 分支要重置 _initPromise = null
+            return _initPromise.catch(e => {
+                _initPromise = null; // 确保下次调用能重试
+                throw e;
+            });
         },
 
         // 添加笔记

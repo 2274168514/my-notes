@@ -8,6 +8,8 @@ createApp({
             showComposeModal: false,
             showDetailModal: false,
             showFilterModal: false,
+            // 心情选择气泡显示状态
+            showMoodSelector: false,
             selectedNote: null,
             tagInput: '',
             detailTagInput: '',
@@ -18,7 +20,8 @@ createApp({
             newNote: {
                 text: '',
                 images: [],  // 改为数组存储多张图片
-                tags: []
+                tags: [],
+                mood: 'cloudy' // 默认心情：阴天
             },
             // 默认标签配置
             defaultTags: [
@@ -124,11 +127,10 @@ createApp({
     async mounted() {
         try {
             // 加载本地点赞状态
-            this.loadingText = '正在初始化...';
+            this.loadingText = '正在启动...';
             this.loadLocalLikedNotes();
 
             // 等待 Supabase 初始化完成
-            this.loadingText = '正在连接数据库...';
             await Storage.init();
 
             // 加载笔记
@@ -139,7 +141,7 @@ createApp({
             window.addEventListener('scroll', this.handleScroll);
         } catch (error) {
             console.error('初始化失败:', error);
-            this.loadError = '加载失败，请刷新页面重试';
+            this.loadError = '网络连接异常，请刷新重试';
             this.isLoading = false;
         }
     },
@@ -172,6 +174,17 @@ createApp({
 
         // 加载笔记（第一页）
         async loadNotes() {
+            // 尝试确保 Supabase 已初始化
+            try {
+                await Storage.init();
+            } catch (e) {
+                console.warn('尝试初始化 Supabase 失败:', e);
+                // 不阻断，让下面的 fetchNotes 报更具体的错，或者在这里显示错误
+                this.loadError = '初始化失败: ' + (e.message || '网络异常');
+                this.isLoading = false;
+                return; // 如果初始化都挂了，就别查数据了
+            }
+
             this.page = 0;
             this.hasMore = true;
             this.notes = []; // 清空现有笔记
@@ -376,6 +389,20 @@ createApp({
             this.showFilterModal = true;
         },
 
+        // 切换心情选择器显示状态
+        toggleMoodSelector() {
+            this.showMoodSelector = !this.showMoodSelector;
+        },
+
+        // 选择心情
+        selectMood(mood) {
+            this.newNote.mood = mood;
+            // 稍等一下再关闭气泡，给用户视觉反馈
+            setTimeout(() => {
+                this.showMoodSelector = false;
+            }, 200);
+        },
+
         // 关闭筛选弹窗
         closeFilterModal() {
             this.showFilterModal = false;
@@ -432,6 +459,7 @@ createApp({
                 text: this.newNote.text.trim(),
                 images: this.newNote.images, // 传递完整对象，包含 file 属性
                 tags: [...this.newNote.tags],
+                mood: this.newNote.mood || 'cloudy', // 确保有默认值
                 timestamp: Date.now()
             };
 
@@ -466,7 +494,7 @@ createApp({
                 // 显示详细错误信息
                 const errorMsg = error.message || error.toString() || '未知错误';
                 if (errorMsg.includes('网络') || errorMsg.includes('fetch')) {
-                    alert('网络连接失败，请检查网络后重试');
+                    alert('网络连接异常，请刷新重试');
                 } else {
                     alert('保存失败: ' + errorMsg);
                 }
@@ -519,7 +547,7 @@ createApp({
                 // 提示用户
                 console.error('收藏操作失败:', error);
                 if (error.message.includes('网络')) {
-                    alert('网络连接失败，请检查网络后重试');
+                    alert('网络连接异常，请刷新重试');
                 } else {
                     alert('操作失败，请重试');
                 }
@@ -580,7 +608,7 @@ createApp({
                 console.error('点赞操作失败:', error);
                 const errorMsg = error.message || error.toString() || '未知错误';
                 if (errorMsg.includes('网络') || errorMsg.includes('fetch')) {
-                    alert('网络连接失败，请检查网络后重试');
+                    alert('网络连接异常，请刷新重试');
                 } else {
                     alert('点赞失败: ' + errorMsg);
                 }
@@ -598,9 +626,11 @@ createApp({
             this.newNote = {
                 text: '',
                 images: [],
-                tags: []
+                tags: [],
+                mood: 'cloudy'
             };
             this.tagInput = '';
+            this.showMoodSelector = false;
         },
 
         // 格式化时间（简短版，用于时间线）

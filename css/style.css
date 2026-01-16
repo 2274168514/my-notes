@@ -1,5 +1,9 @@
 /* iOS 17+ 设计系统 - 横向时间线布局 */
 
+[v-cloak] {
+    display: none !important;
+}
+
 :root {
     /* iOS 颜色系统 */
     --ios-blue: #007AFF;
@@ -36,6 +40,15 @@
     --spacing-md: 12px;
     --spacing-lg: 16px;
     --spacing-xl: 20px;
+
+    /* 心情颜色 */
+    --mood-sunny: #FF9500;
+    --mood-cloudy: #8E8E93;
+    --mood-rainy: #5856D6;
+    
+    --bg-sunny: rgba(255, 149, 0, 0.05);
+    --bg-cloudy: rgba(142, 142, 147, 0.05);
+    --bg-rainy: rgba(88, 86, 214, 0.05);
 }
 
 * {
@@ -263,18 +276,48 @@ body {
     transition: all 0.2s ease;
 }
 
-/* 收藏的时间点 */
+/* 心情颜色支持 */
+.note-dot.mood-sunny {
+    background: var(--mood-sunny);
+    box-shadow: 0 0 0 4px var(--bg-sunny);
+}
+
+.note-dot.mood-cloudy {
+    background: var(--mood-cloudy);
+    box-shadow: 0 0 0 4px var(--bg-cloudy);
+}
+
+.note-dot.mood-rainy {
+    background: var(--mood-rainy);
+    box-shadow: 0 0 0 4px var(--bg-rainy);
+}
+
+/* 收藏的时间点 - 优先级最高 */
 .note-card.is-favorite .note-dot {
-    background: var(--ios-yellow);
-    box-shadow: 0 0 0 4px rgba(255, 204, 0, 0.15);
+    /* 保持心情颜色作为背景，但使用金色光晕 */
+    box-shadow: 0 0 0 4px rgba(255, 204, 0, 0.25);
 }
 
 .note-card:hover .note-dot {
     box-shadow: 0 0 0 6px rgba(0, 122, 255, 0.25);
 }
 
+/* 保持hover时的心情光晕颜色 */
+.note-card:hover .note-dot.mood-sunny {
+    box-shadow: 0 0 0 6px var(--bg-sunny);
+}
+
+.note-card:hover .note-dot.mood-cloudy {
+    box-shadow: 0 0 0 6px var(--bg-cloudy);
+}
+
+.note-card:hover .note-dot.mood-rainy {
+    box-shadow: 0 0 0 6px var(--bg-rainy);
+}
+
+/* 收藏状态hover时的金色光晕 */
 .note-card.is-favorite:hover .note-dot {
-    box-shadow: 0 0 0 6px rgba(255, 204, 0, 0.25);
+    box-shadow: 0 0 0 6px rgba(255, 204, 0, 0.35);
 }
 
 /* 卡片内容 */
@@ -800,6 +843,7 @@ body {
     padding: var(--spacing-lg) var(--spacing-xl);
     border-top: 0.5px solid var(--separator);
     background: var(--bg-tertiary);
+    position: relative; /* 为弹出层定位 */
 }
 
 .toolbar-btn {
@@ -814,11 +858,89 @@ body {
     justify-content: center;
     cursor: pointer;
     transition: background 0.15s ease;
+    position: relative;
 }
 
 .toolbar-btn:hover {
     background: rgba(0, 122, 255, 0.1);
 }
+
+/* 心情选择器气泡 */
+.mood-selector-bubble {
+    position: absolute;
+    bottom: 50px; /* 在按钮上方 */
+    left: 20px; /* 稍微调整位置 */
+    background: var(--bg-secondary);
+    border-radius: var(--radius-large);
+    padding: 8px 12px;
+    display: flex;
+    gap: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    z-index: 101;
+    animation: bubble-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mood-selector-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 20px;
+    width: 12px;
+    height: 12px;
+    background: var(--bg-secondary);
+    transform: rotate(45deg);
+    box-shadow: 4px 4px 6px rgba(0,0,0,0.05);
+}
+
+@keyframes bubble-pop {
+    from { transform: scale(0.8) translateY(10px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.mood-option {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: var(--text-tertiary);
+    border: 2px solid transparent;
+}
+
+.mood-option:hover {
+    background: var(--bg-tertiary);
+    transform: scale(1.1);
+}
+
+/* 选中状态 */
+.mood-option.active {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.mood-option.active[data-mood="sunny"] {
+    color: var(--mood-sunny);
+    border-color: var(--mood-sunny);
+}
+
+.mood-option.active[data-mood="cloudy"] {
+    color: var(--mood-cloudy);
+    border-color: var(--mood-cloudy);
+}
+
+.mood-option.active[data-mood="rainy"] {
+    color: var(--mood-rainy);
+    border-color: var(--mood-rainy);
+}
+
+/* 按钮本身的激活态颜色 */
+.toolbar-btn.mood-btn-sunny { color: var(--mood-sunny); }
+.toolbar-btn.mood-btn-cloudy { color: var(--mood-cloudy); }
+.toolbar-btn.mood-btn-rainy { color: var(--mood-rainy); }
 
 .hidden-input {
     display: none;
@@ -965,6 +1087,23 @@ body {
     padding-top: var(--spacing-md);
     border-top: 0.5px solid var(--separator);
 }
+
+.detail-date-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 详情页心情图标 */
+.mood-icon-detail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mood-icon-detail.sunny { color: var(--mood-sunny); }
+.mood-icon-detail.cloudy { color: var(--mood-cloudy); }
+.mood-icon-detail.rainy { color: var(--mood-rainy); }
 
 .detail-date {
     font-size: 14px;
