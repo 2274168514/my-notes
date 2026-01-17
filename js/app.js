@@ -990,6 +990,16 @@ createApp({
         },
 
         // 格式化时间（详细版，用于详情）
+        // 获取缩略图 URL (利用 Supabase Image Transformation)
+        getThumbnailUrl(url) {
+            if (!url) return "";
+            if (url.includes("supabase.co") && url.includes("/storage/v1/object/public/")) {
+                // 列表页缩略图：宽 400px，质量 80
+                return `${url}?width=400&quality=80`;
+            }
+            return url;
+        },
+
         formatDetailTime(timestamp) {
             const date = new Date(timestamp);
             const year = date.getFullYear();
