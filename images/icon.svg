@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="512" height="512" rx="128" fill="#F2F2F7"/>
+    
+    <!-- Circle 1 (Blue) -->
+    <circle cx="200" cy="256" r="120" fill="#007AFF" fill-opacity="0.8"/>
+    
+    <!-- Circle 2 (Orange) -->
+    <circle cx="312" cy="256" r="120" fill="#FF9500" fill-opacity="0.8"/>
+    
+    <!-- Heart in intersection (White stroke) -->
+    <path d="M256 280.5C256 280.5 226 250 226 230C226 215 236 205 250 205C256 205 266 210 266 210C266 210 276 205 282 205C296 205 306 215 306 230C306 250 276 280.5 256 280.5Z" fill="white" stroke="white" stroke-width="10" stroke-linejoin="round"/>
+</svg>
