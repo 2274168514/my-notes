@@ -182,12 +182,7 @@ const Storage = (function() {
                 const uploadPromises = note.images.map(async (img) => {
                     // 如果包含 file 对象，说明是新上传的图片
                     if (img.file) {
-                        try {
-                            return await uploadImage(img.file);
-                        } catch (e) {
-                            console.error('图片上传失败，降级使用预览图:', e);
-                            return img.data || img.preview; // 降级处理
-                        }
+                        return await uploadImage(img.file);
                     }
                     // 否则可能是旧的 Base64 字符串或者已经是 URL
                     return img.data || img; 
