@@ -406,13 +406,13 @@
                             <img
                                 v-for="(img, index) in selectedNote.images"
                                 :key="index"
-                                :src="getThumbnailUrl(img)"
+                                :src="img"
                                 class="detail-image"
                                 alt=""
                                 @click="openImageViewer(selectedNote.images, index)"
                             >
                         </div>
-                        <img v-else-if="selectedNote.image" :src="getThumbnailUrl(selectedNote.image)" class="detail-image detail-image-single" alt="" @click="openImageViewer([selectedNote.image], 0)">
+                        <img v-else-if="selectedNote.image" :src="selectedNote.image" class="detail-image detail-image-single" alt="" @click="openImageViewer([selectedNote.image], 0)">
 
                         <!-- 标签编辑区 -->
                         <div class="detail-tags-edit">
