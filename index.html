@@ -141,8 +141,8 @@
                             <p class="card-text">{{ note.text }}</p>
 
                             <!-- 图片 - 兼容新旧数据 -->
-                            <img v-if="note.images && note.images.length" :src="note.images[0]" class="card-image" alt="">
-                            <img v-else-if="note.image" :src="note.image" class="card-image" alt="">
+                            <img v-if="note.images && note.images.length" :src="getThumbnailUrl(note.images[0])" class="card-image" alt="">
+                            <img v-else-if="note.image" :src="getThumbnailUrl(note.image)" class="card-image" alt="">
 
                             <!-- 标签和点赞行 -->
                             <div class="card-actions-row">
@@ -406,13 +406,13 @@
                             <img
                                 v-for="(img, index) in selectedNote.images"
                                 :key="index"
-                                :src="img"
+                                :src="getThumbnailUrl(img)"
                                 class="detail-image"
                                 alt=""
                                 @click="openImageViewer(selectedNote.images, index)"
                             >
                         </div>
-                        <img v-else-if="selectedNote.image" :src="selectedNote.image" class="detail-image detail-image-single" alt="" @click="openImageViewer([selectedNote.image], 0)">
+                        <img v-else-if="selectedNote.image" :src="getThumbnailUrl(selectedNote.image)" class="detail-image detail-image-single" alt="" @click="openImageViewer([selectedNote.image], 0)">
 
                         <!-- 标签编辑区 -->
                         <div class="detail-tags-edit">

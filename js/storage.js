@@ -29,17 +29,58 @@ const Storage = (function() {
         });
     }
 
+    // Base64 转 Blob
+    function base64ToBlob(base64) {
+        const arr = base64.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    }
+
     // 压缩图片（减少存储空间）
     // ============ Storage 上传 ============
 
     // 上传图片到 Supabase Storage
     async function uploadImage(file) {
         const client = getClient();
+
+        // 优化：上传前压缩图片
+        try {
+            // 只有图片才压缩
+            if (file.type.startsWith('image/')) {
+                // 转 Base64
+                const base64 = await imageToBase64(file);
+                // 压缩 (最大 4096px - 4K画质)
+                const compressedBase64 = await compressImage(base64, 4096);
+                // 转回 Blob
+                const compressedBlob = base64ToBlob(compressedBase64);
+                // 只有当压缩后体积变小了才使用压缩版 (防止反向优化)
+                if (compressedBlob.size < file.size) {
+                    file = compressedBlob;
+                    // 修正文件扩展名为 jpg (因为 compressImage 输出 image/jpeg)
+                    // 但这里 file 是 Blob，没有 name 属性，文件名是在下面生成的
+                    // 只需要注意下面生成文件名时 extension 的获取
+                }
+            }
+        } catch (e) {
+            console.warn('[Storage] 图片压缩失败，使用原图:', e);
+        }
         
         // 生成唯一文件名: timestamp_random.ext
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8);
-        const ext = file.name.split('.').pop() || 'jpg';
+        
+        // 确定扩展名：如果被压缩成Blob（它是jpeg），则用jpg；否则沿用原文件名后缀
+        let ext = 'jpg';
+        if (file.name) {
+            ext = file.name.split('.').pop() || 'jpg';
+        }
+        
         const fileName = `${timestamp}_${random}.${ext}`;
 
         // 上传文件
@@ -88,8 +129,8 @@ const Storage = (function() {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // 压缩为 JPEG，质量 0.8
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
+                // 压缩为 JPEG，质量 0.9
+                resolve(canvas.toDataURL('image/jpeg', 0.9));
             };
 
             img.onerror = () => resolve(base64);
