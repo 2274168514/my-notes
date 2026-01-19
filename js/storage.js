@@ -55,8 +55,8 @@ const Storage = (function() {
             if (file.type.startsWith('image/')) {
                 // 转 Base64
                 const base64 = await imageToBase64(file);
-                // 压缩 (最大 4096px - 4K画质)
-                const compressedBase64 = await compressImage(base64, 4096);
+                // 压缩 (最大 2560px - 2.5K画质，平衡清晰度与体积)
+                const compressedBase64 = await compressImage(base64, 2560);
                 // 转回 Blob
                 const compressedBlob = base64ToBlob(compressedBase64);
                 // 只有当压缩后体积变小了才使用压缩版 (防止反向优化)
@@ -89,11 +89,12 @@ const Storage = (function() {
             .from('images')
             .upload(fileName, file, {
                 cacheControl: '3600',
-                upsert: false
+                upsert: false,
+                contentType: file.type || 'image/jpeg'
             });
 
         if (error) {
-            console.error('[Storage] 上传失败:', error);
+            console.error('[Storage] 上传失败详情:', JSON.stringify(error));
             throw error;
         }
 
@@ -129,8 +130,8 @@ const Storage = (function() {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // 压缩为 JPEG，质量 0.9
-                resolve(canvas.toDataURL('image/jpeg', 0.9));
+                // 压缩为 JPEG，质量 0.85
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
             };
 
             img.onerror = () => resolve(base64);
