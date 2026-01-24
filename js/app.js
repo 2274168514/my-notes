@@ -316,6 +316,10 @@ createApp({
                         this.loadError = '加载失败: ' + error.message;
                         this.isLoading = false;
                     }
+                } else {
+                    // 加载更多失败时，回滚页码，防止死循环重试
+                    this.page = Math.max(0, this.page - 1);
+                    console.warn('加载更多失败，已回滚页码到:', this.page);
                 }
             }
         },
